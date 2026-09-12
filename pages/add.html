@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#38a169" />
+  <title>Add Company – Dwarkesh Polyfab CRM</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="icon" href="../assets/logo.png" type="image/png" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header header-green">
+    <a href="../index.html" class="back-btn">&#8592;</a>
+    <div>
+      <h1 class="header-title">Add Data</h1>
+      <p class="header-sub">Add new company to your CRM</p>
+    </div>
+  </div>
+
+  <!-- Success Banner -->
+  <div class="alert alert-success hidden" id="success-msg">✅ Company saved successfully!</div>
+
+  <!-- Form -->
+  <div class="page-body">
+
+    <!-- Company Name -->
+    <div class="field">
+      <label class="field-label">Company Name *</label>
+      <input type="text" class="input" id="inp-name" placeholder="Enter company name" />
+      <p class="field-error hidden" id="err-name">Company name is required</p>
+    </div>
+
+    <!-- City -->
+    <div class="field">
+      <label class="field-label">Address (City) *</label>
+      <div class="autocomplete">
+        <input type="text" class="input" id="inp-city" placeholder="Type or select city" autocomplete="off"
+               oninput="onCityInput()" onfocus="onCityFocus()" />
+        <p class="field-error hidden" id="err-city">City is required</p>
+        <div class="autocomplete-list hidden" id="city-dropdown"></div>
+        <div class="hidden" id="city-backdrop" onclick="closeCityDropdown()" style="position:fixed;inset:0;z-index:15"></div>
+      </div>
+    </div>
+
+    <!-- Nature -->
+    <div class="field">
+      <label class="field-label">Nature *</label>
+      <div class="chip-group" id="nature-group"></div>
+    </div>
+
+    <!-- Phone -->
+    <div class="field">
+      <label class="field-label">Phone Number</label>
+      <input type="tel" class="input" id="inp-phone" placeholder="Optional – enter phone number" />
+    </div>
+
+    <!-- Status -->
+    <div class="field">
+      <label class="field-label">Status *</label>
+      <div class="chip-group" id="status-group"></div>
+    </div>
+
+    <!-- Schedule Follow-up toggle -->
+    <div class="card">
+      <label class="toggle-row">
+        <input type="checkbox" id="schedule-toggle" onchange="toggleSchedule()" />
+        <div>
+          <p class="toggle-label">Schedule First Follow-up</p>
+          <p class="toggle-sub">Set a reminder to contact this company</p>
+        </div>
+      </label>
+      <div class="hidden" id="schedule-fields" style="margin-top:12px">
+        <div class="grid-2">
+          <input type="date" class="input input-sm" id="inp-followup-date" />
+          <input type="time" class="input input-sm" id="inp-followup-time" value="10:00" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sticky Bottom Buttons -->
+  <div class="page-footer">
+    <button class="btn btn-green btn-full btn-lg" onclick="handleSave()">✓ Save Company</button>
+    <button class="btn btn-outline-green btn-full" onclick="handleSaveAndAdd()">Save &amp; Add Another</button>
+  </div>
+
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  let selectedNature = 'Manufacturer';
+  let selectedStatus = 'Untouch';
+  let selectedCity   = '';
+
+  // ── Build chip groups ──
+  function buildChips() {
+    const nGroup = document.getElementById('nature-group');
+    nGroup.innerHTML = ALL_NATURES.map(n =>
+      `<button class="chip ${n === selectedNature ? 'selected' : ''}" onclick="selectNature('${n}')">${n}</button>`
+    ).join('');
+
+    const sGroup = document.getElementById('status-group');
+    sGroup.innerHTML = ALL_STATUSES.map(s =>
+      `<button class="chip ${s === selectedStatus ? 'selected' : ''}" onclick="selectStatus('${s}')" style="font-size:11px">${s}</button>`
+    ).join('');
+
+    // Set today's date for follow-up
+    document.getElementById('inp-followup-date').value = todayStr();
+  }
+
+  function selectNature(n) {
+    selectedNature = n;
+    buildChips();
+  }
+  function selectStatus(s) {
+    selectedStatus = s;
+    buildChips();
+  }
+
+  // ── City autocomplete ──
+  function onCityInput() {
+    const val = document.getElementById('inp-city').value;
+    selectedCity = '';
+    showCityDropdown(val);
+  }
+  function onCityFocus() {
+    showCityDropdown(document.getElementById('inp-city').value);
+  }
+  function showCityDropdown(query) {
+    const dd = document.getElementById('city-dropdown');
+    const bb = document.getElementById('city-backdrop');
+    const filtered = CITIES.filter(c => c.toLowerCase().includes(query.toLowerCase()));
+
+    if (filtered.length === 0) {
+      dd.innerHTML = `<div class="autocomplete-item" style="color:#2563eb" onclick="useCustomCity()">Use &ldquo;${query}&rdquo;</div>`;
+    } else {
+      dd.innerHTML = filtered.map(c =>
+        `<div class="autocomplete-item" onclick="pickCity('${c}')">${c}</div>`
+      ).join('');
+    }
+    dd.classList.remove('hidden');
+    bb.classList.remove('hidden');
+  }
+  function pickCity(city) {
+    selectedCity = city;
+    document.getElementById('inp-city').value = city;
+    closeCityDropdown();
+    document.getElementById('err-city').classList.add('hidden');
+  }
+  function useCustomCity() {
+    selectedCity = document.getElementById('inp-city').value.trim();
+    closeCityDropdown();
+  }
+  function closeCityDropdown() {
+    document.getElementById('city-dropdown').classList.add('hidden');
+    document.getElementById('city-backdrop').classList.add('hidden');
+  }
+
+  function toggleSchedule() {
+    const checked = document.getElementById('schedule-toggle').checked;
+    const fields  = document.getElementById('schedule-fields');
+    if (checked) fields.classList.remove('hidden');
+    else         fields.classList.add('hidden');
+  }
+
+  // ── Validate & get values ──
+  function getFormValues() {
+    return {
+      name:   document.getElementById('inp-name').value.trim(),
+      city:   selectedCity || document.getElementById('inp-city').value.trim(),
+      nature: selectedNature,
+      phone:  document.getElementById('inp-phone').value.trim(),
+      status: selectedStatus,
+    };
+  }
+
+  function validate(vals) {
+    let ok = true;
+    if (!vals.name) {
+      document.getElementById('err-name').classList.remove('hidden');
+      ok = false;
+    } else {
+      document.getElementById('err-name').classList.add('hidden');
+    }
+    if (!vals.city) {
+      document.getElementById('err-city').classList.remove('hidden');
+      ok = false;
+    } else {
+      document.getElementById('err-city').classList.add('hidden');
+    }
+    return ok;
+  }
+
+  function saveAndMaybeReminder(vals) {
+    const company = addCompany(vals);
+    const doSchedule = document.getElementById('schedule-toggle').checked;
+    if (doSchedule) {
+      const date = document.getElementById('inp-followup-date').value;
+      const time = document.getElementById('inp-followup-time').value || '10:00';
+      if (date) addReminder(company.id, date, time);
+    }
+    return company;
+  }
+
+  function handleSave() {
+    const vals = getFormValues();
+    if (!validate(vals)) return;
+    saveAndMaybeReminder(vals);
+    const msg = document.getElementById('success-msg');
+    msg.classList.remove('hidden');
+    setTimeout(() => { window.location.href = 'data.html'; }, 800);
+  }
+
+  function handleSaveAndAdd() {
+    const vals = getFormValues();
+    if (!validate(vals)) return;
+    saveAndMaybeReminder(vals);
+
+    // Flash success
+    const msg = document.getElementById('success-msg');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 1200);
+
+    // Reset form
+    document.getElementById('inp-name').value  = '';
+    document.getElementById('inp-city').value  = '';
+    document.getElementById('inp-phone').value = '';
+    document.getElementById('schedule-toggle').checked = false;
+    document.getElementById('schedule-fields').classList.add('hidden');
+    document.getElementById('inp-followup-date').value = todayStr();
+    document.getElementById('inp-followup-time').value = '10:00';
+    selectedCity = ''; selectedNature = 'Manufacturer'; selectedStatus = 'Untouch';
+    buildChips();
+    document.getElementById('inp-name').focus();
+  }
+
+  buildChips();
+</script>
+</body>
+</html>

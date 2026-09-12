@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1a365d" />
+  <title>Dwarkesh Polyfab CRM</title>
+  <meta name="description" content="Sales Follow-up & Lead Management System for Dwarkesh Polyfab" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="icon" href="assets/logo.png" type="image/png" />
+</head>
+<body>
+
+<div class="home-wrap">
+
+  <!-- Branding -->
+  <div class="home-body">
+    <div class="logo-ring">
+      <img src="assets/logo.png" alt="Dwarkesh Polyfab Logo" />
+    </div>
+
+    <h1 class="brand-name">Dwarkesh Polyfab</h1>
+    <p class="brand-tagline">PP Woven &amp; BOPP Laminated Bags</p>
+
+    <div class="slogan-box">
+      <p class="slogan-text">&ldquo;Quality Packaging, Trusted Worldwide&rdquo;</p>
+    </div>
+
+    <p class="motivation">
+      🌟 Our dream is to become India's most trusted packaging partner.<br />
+      Every bag we make carries our promise of quality and dedication.
+    </p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div style="text-align:center">
+        <p class="stat-num" id="stat-companies">0</p>
+        <p class="stat-label">Companies</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div style="text-align:center">
+        <p class="stat-num" id="stat-pending">0</p>
+        <p class="stat-label">Pending</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="home-actions">
+
+    <!-- 3 Reminder buttons -->
+    <div class="btn-row-3">
+
+      <a href="pages/reminders.html?tab=today" class="nav-card">
+        <div style="position:relative">
+          <span class="icon">📋</span>
+          <span class="badge badge-blue hidden" id="badge-today">0</span>
+        </div>
+        <span class="label">Today's<br />Reminder</span>
+      </a>
+
+      <a href="pages/reminders.html?tab=missed" class="nav-card">
+        <div style="position:relative">
+          <span class="icon">⚠️</span>
+          <span class="badge badge-red hidden" id="badge-missed">0</span>
+        </div>
+        <span class="label">Missed<br />Reminder</span>
+      </a>
+
+      <a href="pages/reminders.html?tab=tomorrow" class="nav-card">
+        <div style="position:relative">
+          <span class="icon">📅</span>
+          <span class="badge badge-green hidden" id="badge-tomorrow">0</span>
+        </div>
+        <span class="label">Tomorrow's<br />Reminder</span>
+      </a>
+
+    </div>
+
+    <!-- Add Data & Data buttons -->
+    <div class="btn-row-2">
+      <a href="pages/add.html" class="btn-action-green">
+        <span>➕</span> Add Data
+      </a>
+      <a href="pages/data.html" class="btn-action-white">
+        <span>📊</span> Data
+      </a>
+    </div>
+
+    <!-- Backup / Restore -->
+    <div class="btn-row-2" style="margin-top:4px">
+      <button onclick="exportData()" class="btn-action-white" style="font-size:12px">
+        <span>💾</span> Backup
+      </button>
+      <label class="btn-action-white" style="font-size:12px;cursor:pointer">
+        <span>📂</span> Restore
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(this)" />
+      </label>
+    </div>
+
+  </div>
+
+  <div class="home-footer">
+    <p>Dwarkesh Polyfab CRM &bull; Morbi, Gujarat</p>
+  </div>
+
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  // Load counts and stats on home page
+  function refreshHome() {
+    const db     = loadData();
+    const counts = getCounts();
+
+    // Stats
+    document.getElementById('stat-companies').textContent = db.companies.length;
+    document.getElementById('stat-pending').textContent   = counts.today + counts.missed;
+
+    // Badges
+    function setBadge(id, count) {
+      const el = document.getElementById(id);
+      if (count > 0) { el.textContent = count; el.classList.remove('hidden'); }
+      else           { el.classList.add('hidden'); }
+    }
+    setBadge('badge-today',    counts.today);
+    setBadge('badge-missed',   counts.missed);
+    setBadge('badge-tomorrow', counts.tomorrow);
+  }
+
+  function handleImport(input) {
+    const file = input.files[0];
+    if (!file) return;
+    importData(file).then(() => {
+      alert('✅ Data restored successfully!');
+      refreshHome();
+    }).catch(err => alert('❌ Error: ' + err));
+    input.value = '';
+  }
+
+  refreshHome();
+</script>
+</body>
+</html>

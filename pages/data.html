@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1a365d" />
+  <title>Data – Dwarkesh Polyfab CRM</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="icon" href="../assets/logo.png" type="image/png" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header header-blue" style="flex-direction:column;gap:10px;align-items:stretch">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="../index.html" class="back-btn">&#8592;</a>
+      <div style="flex:1">
+        <h1 class="header-title">Data</h1>
+        <p class="header-sub" id="total-count">0 total companies</p>
+      </div>
+      <a href="add.html" style="width:36px;height:36px;border-radius:10px;background:#38a169;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;flex-shrink:0">+</a>
+    </div>
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="search-input" placeholder="Search companies..." oninput="renderList()" />
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-bar">
+    <div class="filter-inner" id="filter-bar"></div>
+  </div>
+
+  <!-- Company List -->
+  <div class="page-body" id="company-list"></div>
+
+</div>
+
+<!-- Status Dropdown Backdrop -->
+<div class="dropdown-backdrop hidden" id="dd-backdrop" onclick="closeDropdown()"></div>
+
+<script src="../assets/app.js"></script>
+<script>
+  let activeFilter = 'All';
+  let openDropdownId = null;
+
+  function buildFilters() {
+    const db = loadData();
+    const counts = { All: db.companies.length };
+    ALL_STATUSES.forEach(s => { counts[s] = db.companies.filter(c => c.status === s).length; });
+
+    const bar = document.getElementById('filter-bar');
+    const tabs = ['All', ...ALL_STATUSES];
+    bar.innerHTML = tabs.map(t =>
+      `<button class="filter-chip ${t === activeFilter ? 'active' : ''}" onclick="setFilter('${t}')">${t} (${counts[t] || 0})</button>`
+    ).join('');
+  }
+
+  function setFilter(f) {
+    activeFilter = f;
+    buildFilters();
+    renderList();
+  }
+
+  function renderList() {
+    const db     = loadData();
+    const query  = (document.getElementById('search-input').value || '').toLowerCase().trim();
+
+    let list = [...db.companies];
+
+    if (activeFilter !== 'All') {
+      list = list.filter(c => c.status === activeFilter);
+    }
+    if (query) {
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(query) ||
+        c.city.toLowerCase().includes(query) ||
+        (c.phone || '').includes(query) ||
+        c.nature.toLowerCase().includes(query)
+      );
+    }
+
+    document.getElementById('total-count').textContent = `${db.companies.length} total companies`;
+
+    const el = document.getElementById('company-list');
+
+    if (list.length === 0) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">📭</span>
+          <p class="empty-title">${query ? 'No matching companies' : 'No companies in this segment'}</p>
+          <p class="empty-sub">${!query ? '<a href="add.html">Add your first company →</a>' : ''}</p>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = list.map(company => {
+      const sc  = STATUS_CLASS[company.status] || '';
+      const dot = STATUS_DOT[company.status]   || '';
+      return `
+        <div class="company-card" onclick="goCompany('${company.id}')">
+          <div class="avatar">${initials(company.name)}</div>
+          <div class="company-info">
+            <p class="company-name">${company.name}</p>
+            <p class="company-meta">${company.city} &bull; ${company.nature}${company.phone ? ' &bull; ' + company.phone : ''}</p>
+          </div>
+          <div class="dropdown-wrap" onclick="event.stopPropagation()">
+            <button class="status-badge ${sc}" onclick="toggleDropdown('${company.id}')">
+              ${company.status} <span style="font-size:8px">▼</span>
+            </button>
+            <div class="dropdown-list hidden" id="dd-${company.id}">
+              ${ALL_STATUSES.map(s => `
+                <div class="dropdown-item ${s === company.status ? 'current' : ''}" onclick="changeStatusBtn('${company.id}','${s}')">
+                  <span class="dropdown-dot ${STATUS_DOT[s]}"></span>
+                  ${s}
+                  ${s === company.status ? '<span style="margin-left:auto;color:#22c55e">✓</span>' : ''}
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function goCompany(id) {
+    window.location.href = 'company.html?id=' + id;
+  }
+
+  function toggleDropdown(id) {
+    if (openDropdownId && openDropdownId !== id) closeDropdown();
+    const dd = document.getElementById('dd-' + id);
+    if (!dd) return;
+    const isOpen = !dd.classList.contains('hidden');
+    if (isOpen) {
+      closeDropdown();
+    } else {
+      dd.classList.remove('hidden');
+      document.getElementById('dd-backdrop').classList.remove('hidden');
+      openDropdownId = id;
+    }
+  }
+
+  function closeDropdown() {
+    if (openDropdownId) {
+      const dd = document.getElementById('dd-' + openDropdownId);
+      if (dd) dd.classList.add('hidden');
+      openDropdownId = null;
+    }
+    document.getElementById('dd-backdrop').classList.add('hidden');
+  }
+
+  function changeStatusBtn(id, status) {
+    changeStatus(id, status);
+    closeDropdown();
+    buildFilters();
+    renderList();
+  }
+
+  buildFilters();
+  renderList();
+</script>
+</body>
+</html>

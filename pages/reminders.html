@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1a365d" />
+  <title>Reminders – Dwarkesh Polyfab CRM</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="icon" href="../assets/logo.png" type="image/png" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header header-blue" style="flex-direction:column;gap:12px;align-items:stretch">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="../index.html" class="back-btn">&#8592;</a>
+      <h1 class="header-title">Reminders</h1>
+    </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn" id="tab-today"    onclick="switchTab('today')">
+        <span style="display:block;font-size:18px;margin-bottom:2px">📋</span>
+        Today (<span id="count-today">0</span>)
+      </button>
+      <button class="tab-btn" id="tab-missed"   onclick="switchTab('missed')">
+        <span style="display:block;font-size:18px;margin-bottom:2px">⚠️</span>
+        Missed (<span id="count-missed">0</span>)
+      </button>
+      <button class="tab-btn" id="tab-tomorrow" onclick="switchTab('tomorrow')">
+        <span style="display:block;font-size:18px;margin-bottom:2px">📅</span>
+        Tomorrow (<span id="count-tomorrow">0</span>)
+      </button>
+    </div>
+  </div>
+
+  <!-- Reminder List -->
+  <div class="page-body" id="reminder-list" style="padding-top:12px"></div>
+
+</div>
+
+<!-- Action Dialog (Called / Message / Not Touch) -->
+<div class="overlay hidden" id="action-overlay" onclick="closeActionIfBg(event)">
+  <div class="modal" id="action-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <p style="font-size:15px;font-weight:800;color:#111827" id="dialog-company-name">Company</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:2px" id="dialog-company-meta"></p>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step 1: What happened -->
+      <div class="field">
+        <label class="field-label">What happened? *</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <button class="action-btn action-btn-called"   onclick="selectType('Called')"   id="btn-Called">
+            <span class="action-icon">📞</span><span style="font-size:10px;font-weight:700">Called</span>
+          </button>
+          <button class="action-btn action-btn-message"  onclick="selectType('Message')"  id="btn-Message">
+            <span class="action-icon">💬</span><span style="font-size:10px;font-weight:700">Message</span>
+          </button>
+          <button class="action-btn action-btn-nottouch" onclick="selectType('Not Touch')" id="btn-Not Touch">
+            <span class="action-icon">❌</span><span style="font-size:10px;font-weight:700">Not Touch</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Notes -->
+      <div class="field hidden" id="notes-field">
+        <label class="field-label" id="notes-label">Notes *</label>
+        <textarea class="textarea" id="notes-input" placeholder="Write notes..."></textarea>
+      </div>
+
+      <!-- Step 3: Next follow-up -->
+      <div class="field hidden" id="next-field">
+        <label class="field-label">Next Follow-up (optional)</label>
+        <div class="grid-2">
+          <input type="date" class="input input-sm" id="next-date" />
+          <input type="time" class="input input-sm" id="next-time" value="10:00" />
+        </div>
+        <p class="text-xxs text-gray mt-4">Set date to auto-schedule next reminder</p>
+      </div>
+
+      <!-- Error -->
+      <p class="text-xs text-red hidden" id="dialog-error"></p>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeAction()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveActivity()">✓ Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  let activeTab = 'today';
+  let activeReminder = null;
+  let selectedType = null;
+
+  // ── Init ──
+  function init() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab') || 'today';
+    switchTab(tab);
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    ['today','missed','tomorrow'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    renderList();
+  }
+
+  function renderList() {
+    const db = loadData();
+    let reminders = [];
+
+    if (activeTab === 'today')    reminders = getTodayReminders();
+    if (activeTab === 'missed')   reminders = getMissedReminders();
+    if (activeTab === 'tomorrow') reminders = getTomorrowReminders();
+
+    // Update counts
+    const counts = getCounts();
+    document.getElementById('count-today').textContent    = counts.today;
+    document.getElementById('count-missed').textContent   = counts.missed;
+    document.getElementById('count-tomorrow').textContent = counts.tomorrow;
+
+    const list = document.getElementById('reminder-list');
+
+    if (reminders.length === 0) {
+      const msgs = {
+        today:    ['✅','No reminders for today!','All caught up. Add data to get started.'],
+        missed:   ['🎉','No missed reminders!','Great job keeping up with follow-ups!'],
+        tomorrow: ['😊','No reminders for tomorrow!','You\'re free tomorrow.'],
+      }[activeTab];
+      list.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">${msgs[0]}</span>
+          <p class="empty-title">${msgs[1]}</p>
+          <p class="empty-sub">${msgs[2]}</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = reminders.map(r => {
+      const company = db.companies.find(c => c.id === r.companyId);
+      if (!company) return '';
+
+      const isMissed = activeTab === 'missed';
+      const phoneLinks = company.phone ? `
+        <div class="quick-links">
+          <a href="tel:${company.phone}" class="quick-link">📱 Call Now</a>
+          <a href="https://wa.me/91${company.phone.replace(/\D/g,'')}" target="_blank" class="quick-link">💬 WhatsApp</a>
+        </div>` : '';
+
+      return `
+        <div class="reminder-card ${isMissed ? 'missed' : ''} fade-in">
+          <div class="reminder-head">
+            <div style="flex:1;min-width:0">
+              <a href="company.html?id=${company.id}" style="font-size:15px;font-weight:700;color:#111827;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${company.name}</a>
+              <p style="font-size:11px;color:#6b7280;margin-top:2px">${company.city} &bull; ${company.nature}${company.phone ? ' &bull; ' + company.phone : ''}</p>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:10px">
+              <span class="reminder-time-badge">${fmtTime(r.time)}</span>
+              ${isMissed ? `<p style="font-size:10px;font-weight:700;color:#ef4444;margin-top:4px">${fmtRelDate(r.date)}</p>` : ''}
+            </div>
+          </div>
+          <div class="reminder-actions">
+            <button class="action-btn action-btn-called"   onclick="openAction('${r.id}')">
+              <span class="action-icon">📞</span><span>Called</span>
+            </button>
+            <button class="action-btn action-btn-message"  onclick="openAction('${r.id}')">
+              <span class="action-icon">💬</span><span>Message</span>
+            </button>
+            <button class="action-btn action-btn-nottouch" onclick="openAction('${r.id}')">
+              <span class="action-icon">❌</span><span>Not Touch</span>
+            </button>
+          </div>
+          ${phoneLinks}
+        </div>`;
+    }).join('');
+  }
+
+  // ── Action Dialog ──
+  function openAction(reminderId) {
+    const db = loadData();
+    activeReminder = db.reminders.find(r => r.id === reminderId);
+    if (!activeReminder) return;
+
+    const company = db.companies.find(c => c.id === activeReminder.companyId);
+    if (!company) return;
+
+    selectedType = null;
+
+    document.getElementById('dialog-company-name').textContent = company.name;
+    document.getElementById('dialog-company-meta').textContent = `${company.city} • ${fmtDate(activeReminder.date)} at ${fmtTime(activeReminder.time)}`;
+    document.getElementById('notes-input').value = '';
+    document.getElementById('next-date').value   = '';
+    document.getElementById('next-time').value   = '10:00';
+    document.getElementById('dialog-error').classList.add('hidden');
+
+    // Reset type buttons style
+    ['Called','Message','Not Touch'].forEach(t => {
+      const btn = document.getElementById('btn-' + t);
+      if (btn) btn.style.outline = 'none';
+    });
+
+    hide(document.getElementById('notes-field'));
+    hide(document.getElementById('next-field'));
+
+    show(document.getElementById('action-overlay'));
+  }
+
+  function closeAction() {
+    hide(document.getElementById('action-overlay'));
+    activeReminder = null;
+    selectedType   = null;
+  }
+
+  function closeActionIfBg(e) {
+    if (e.target === document.getElementById('action-overlay')) closeAction();
+  }
+
+  function selectType(type) {
+    selectedType = type;
+
+    // Highlight selected button
+    ['Called','Message','Not Touch'].forEach(t => {
+      const btn = document.getElementById('btn-' + t);
+      if (!btn) return;
+      btn.style.outline = t === type ? '2px solid #1a365d' : 'none';
+    });
+
+    const notesLabel = {
+      'Called':    'What did you discuss? *',
+      'Message':   'What was the message about? *',
+      'Not Touch': 'Why not contacted? *',
+    }[type];
+
+    document.getElementById('notes-label').textContent = notesLabel;
+    document.getElementById('dialog-error').classList.add('hidden');
+
+    show(document.getElementById('notes-field'));
+    show(document.getElementById('next-field'));
+
+    setTimeout(() => document.getElementById('notes-input').focus(), 100);
+  }
+
+  function saveActivity() {
+    const errEl = document.getElementById('dialog-error');
+
+    if (!selectedType) {
+      errEl.textContent = '⚠️ Please select an action (Called / Message / Not Touch)';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const notes = document.getElementById('notes-input').value.trim();
+    if (!notes) {
+      errEl.textContent = '⚠️ Please enter notes';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    addActivity({
+      companyId:       activeReminder.companyId,
+      reminderId:      activeReminder.id,
+      type:            selectedType,
+      notes:           notes,
+      nextFollowUpDate: document.getElementById('next-date').value,
+      nextFollowUpTime: document.getElementById('next-time').value,
+    });
+
+    closeAction();
+    renderList();
+  }
+
+  init();
+</script>
+</body>
+</html>
