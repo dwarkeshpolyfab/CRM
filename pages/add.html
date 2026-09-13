@@ -5,19 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <meta name="theme-color" content="#38a169" />
   <title>Add Company – Dwarkesh Polyfab CRM</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="apple-touch-icon" href="../assets/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DP CRM" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="icon" href="../assets/logo.png" type="image/png" />
+  <link rel="icon" href="../assets/icon-192.png" type="image/png" />
 </head>
 <body>
-
 <div class="app">
 
   <!-- Header -->
   <div class="header header-green">
     <a href="../index.html" class="back-btn">&#8592;</a>
     <div>
-      <h1 class="header-title">Add Data</h1>
-      <p class="header-sub">Add new company to your CRM</p>
+      <h1 class="header-title">Add Company</h1>
+      <p class="header-sub">Fill details & bag specifications</p>
     </div>
   </div>
 
@@ -26,6 +31,11 @@
 
   <!-- Form -->
   <div class="page-body">
+
+    <!-- ═══ SECTION: Company Info ═══ -->
+    <div style="font-size:11px;font-weight:800;color:#1a365d;text-transform:uppercase;letter-spacing:.6px;padding:4px 2px 2px">
+      🏢 Company Information
+    </div>
 
     <!-- Company Name -->
     <div class="field">
@@ -36,7 +46,7 @@
 
     <!-- City -->
     <div class="field">
-      <label class="field-label">Address (City) *</label>
+      <label class="field-label">City *</label>
       <div class="autocomplete">
         <input type="text" class="input" id="inp-city" placeholder="Type or select city" autocomplete="off"
                oninput="onCityInput()" onfocus="onCityFocus()" />
@@ -54,8 +64,9 @@
 
     <!-- Phone -->
     <div class="field">
-      <label class="field-label">Phone Number</label>
-      <input type="tel" class="input" id="inp-phone" placeholder="Optional – enter phone number" />
+      <label class="field-label">📞 Phone Number</label>
+      <input type="tel" class="input" id="inp-phone" placeholder="e.g. 9876543210" />
+      <p style="font-size:10px;color:#6b7280;margin-top:3px">Used for direct call & WhatsApp</p>
     </div>
 
     <!-- Status -->
@@ -64,12 +75,65 @@
       <div class="chip-group" id="status-group"></div>
     </div>
 
-    <!-- Schedule Follow-up toggle -->
+    <!-- ═══ SECTION: Bag Specifications ═══ -->
+    <div style="font-size:11px;font-weight:800;color:#1a365d;text-transform:uppercase;letter-spacing:.6px;padding:10px 2px 2px;border-top:1px solid #e5e7eb;margin-top:4px">
+      🛍️ Bag Specifications <span style="font-size:9px;font-weight:500;color:#9ca3af;text-transform:none">(fill when customer gives bag details)</span>
+    </div>
+
+    <!-- Bag Size -->
+    <div class="field">
+      <label class="field-label">Bag Size</label>
+      <input type="text" class="input" id="inp-bagSize" placeholder='e.g. 12x18 inches or 30x45 cm' />
+    </div>
+
+    <!-- Bag Weight & GSM (2 col) -->
+    <div class="grid-2">
+      <div class="field">
+        <label class="field-label">Bag Weight</label>
+        <input type="text" class="input" id="inp-bagWeight" placeholder="e.g. 50g or 100g" />
+      </div>
+      <div class="field">
+        <label class="field-label">GSM</label>
+        <input type="text" class="input" id="inp-gsm" placeholder="e.g. 120 GSM" />
+      </div>
+    </div>
+
+    <!-- Print -->
+    <div class="field">
+      <label class="field-label">Print</label>
+      <div class="chip-group" id="print-group"></div>
+    </div>
+
+    <!-- Lamination -->
+    <div class="field">
+      <label class="field-label">Lamination</label>
+      <div class="chip-group" id="lamination-group"></div>
+    </div>
+
+    <!-- Liner -->
+    <div class="field">
+      <label class="field-label">Liner</label>
+      <div class="chip-group" id="liner-group"></div>
+    </div>
+
+    <!-- Fabric Quality -->
+    <div class="field">
+      <label class="field-label">Fabric Quality</label>
+      <div class="chip-group" id="fabric-group"></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="field">
+      <label class="field-label">📝 Notes / Other Details</label>
+      <textarea class="textarea" id="inp-notes" placeholder="Any other details about this company or their bag requirements..." style="min-height:70px"></textarea>
+    </div>
+
+    <!-- ═══ Schedule Follow-up ═══ -->
     <div class="card">
       <label class="toggle-row">
         <input type="checkbox" id="schedule-toggle" onchange="toggleSchedule()" />
         <div>
-          <p class="toggle-label">Schedule First Follow-up</p>
+          <p class="toggle-label">📅 Schedule First Follow-up</p>
           <p class="toggle-sub">Set a reminder to contact this company</p>
         </div>
       </label>
@@ -81,68 +145,76 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- end page-body -->
 
-  <!-- Sticky Bottom Buttons -->
+  <!-- Sticky Buttons -->
   <div class="page-footer">
     <button class="btn btn-green btn-full btn-lg" onclick="handleSave()">✓ Save Company</button>
     <button class="btn btn-outline-green btn-full" onclick="handleSaveAndAdd()">Save &amp; Add Another</button>
   </div>
 
-</div>
+</div><!-- end app -->
 
 <script src="../assets/app.js"></script>
 <script>
-  let selectedNature = 'Manufacturer';
-  let selectedStatus = 'Untouch';
-  let selectedCity   = '';
+  let selectedNature    = 'Manufacturer';
+  let selectedStatus    = 'Untouch';
+  let selectedCity      = '';
+  let selectedPrint     = '';
+  let selectedLamination= '';
+  let selectedLiner     = '';
+  let selectedFabric    = '';
 
-  // ── Build chip groups ──
   function buildChips() {
-    const nGroup = document.getElementById('nature-group');
-    nGroup.innerHTML = ALL_NATURES.map(n =>
-      `<button class="chip ${n === selectedNature ? 'selected' : ''}" onclick="selectNature('${n}')">${n}</button>`
+    // Nature
+    document.getElementById('nature-group').innerHTML = ALL_NATURES.map(n =>
+      `<button class="chip ${n===selectedNature?'selected':''}" onclick="selNature('${n}')">${n}</button>`
     ).join('');
-
-    const sGroup = document.getElementById('status-group');
-    sGroup.innerHTML = ALL_STATUSES.map(s =>
-      `<button class="chip ${s === selectedStatus ? 'selected' : ''}" onclick="selectStatus('${s}')" style="font-size:11px">${s}</button>`
+    // Status
+    document.getElementById('status-group').innerHTML = ALL_STATUSES.map(s =>
+      `<button class="chip ${s===selectedStatus?'selected':''}" style="font-size:11px" onclick="selStatus('${s}')">${s}</button>`
     ).join('');
-
-    // Set today's date for follow-up
+    // Print
+    document.getElementById('print-group').innerHTML = BAG_PRINT_OPTIONS.map(p =>
+      `<button class="chip ${p===selectedPrint?'selected-green selected':''}" style="font-size:11px" onclick="selPrint('${p}')">${p}</button>`
+    ).join('');
+    // Lamination
+    document.getElementById('lamination-group').innerHTML = BAG_LAMINATION_OPTIONS.map(l =>
+      `<button class="chip ${l===selectedLamination?'selected-green selected':''}" style="font-size:11px" onclick="selLamination('${l}')">${l}</button>`
+    ).join('');
+    // Liner
+    document.getElementById('liner-group').innerHTML = BAG_LINER_OPTIONS.map(l =>
+      `<button class="chip ${l===selectedLiner?'selected-green selected':''}" style="font-size:11px" onclick="selLiner('${l}')">${l}</button>`
+    ).join('');
+    // Fabric
+    document.getElementById('fabric-group').innerHTML = BAG_FABRIC_OPTIONS.map(f =>
+      `<button class="chip ${f===selectedFabric?'selected-green selected':''}" onclick="selFabric('${f}')">${f}</button>`
+    ).join('');
+    // Date default
     document.getElementById('inp-followup-date').value = todayStr();
   }
 
-  function selectNature(n) {
-    selectedNature = n;
-    buildChips();
-  }
-  function selectStatus(s) {
-    selectedStatus = s;
-    buildChips();
-  }
+  function selNature(v)     { selectedNature=v;     buildChips(); }
+  function selStatus(v)     { selectedStatus=v;     buildChips(); }
+  function selPrint(v)      { selectedPrint = selectedPrint===v ? '' : v;           buildChips(); }
+  function selLamination(v) { selectedLamination = selectedLamination===v ? '' : v; buildChips(); }
+  function selLiner(v)      { selectedLiner = selectedLiner===v ? '' : v;           buildChips(); }
+  function selFabric(v)     { selectedFabric = selectedFabric===v ? '' : v;         buildChips(); }
 
-  // ── City autocomplete ──
+  // City autocomplete
   function onCityInput() {
     const val = document.getElementById('inp-city').value;
     selectedCity = '';
     showCityDropdown(val);
   }
-  function onCityFocus() {
-    showCityDropdown(document.getElementById('inp-city').value);
-  }
-  function showCityDropdown(query) {
+  function onCityFocus() { showCityDropdown(document.getElementById('inp-city').value); }
+  function showCityDropdown(q) {
     const dd = document.getElementById('city-dropdown');
     const bb = document.getElementById('city-backdrop');
-    const filtered = CITIES.filter(c => c.toLowerCase().includes(query.toLowerCase()));
-
-    if (filtered.length === 0) {
-      dd.innerHTML = `<div class="autocomplete-item" style="color:#2563eb" onclick="useCustomCity()">Use &ldquo;${query}&rdquo;</div>`;
-    } else {
-      dd.innerHTML = filtered.map(c =>
-        `<div class="autocomplete-item" onclick="pickCity('${c}')">${c}</div>`
-      ).join('');
-    }
+    const filtered = CITIES.filter(c => c.toLowerCase().includes(q.toLowerCase()));
+    dd.innerHTML = filtered.length
+      ? filtered.map(c => `<div class="autocomplete-item" onclick="pickCity('${c}')">${c}</div>`).join('')
+      : `<div class="autocomplete-item" style="color:#2563eb" onclick="useCustomCity()">Use "${q}"</div>`;
     dd.classList.remove('hidden');
     bb.classList.remove('hidden');
   }
@@ -162,44 +234,39 @@
   }
 
   function toggleSchedule() {
-    const checked = document.getElementById('schedule-toggle').checked;
-    const fields  = document.getElementById('schedule-fields');
-    if (checked) fields.classList.remove('hidden');
-    else         fields.classList.add('hidden');
+    const on = document.getElementById('schedule-toggle').checked;
+    document.getElementById('schedule-fields').classList.toggle('hidden', !on);
   }
 
-  // ── Validate & get values ──
-  function getFormValues() {
+  function getVals() {
     return {
-      name:   document.getElementById('inp-name').value.trim(),
-      city:   selectedCity || document.getElementById('inp-city').value.trim(),
-      nature: selectedNature,
-      phone:  document.getElementById('inp-phone').value.trim(),
-      status: selectedStatus,
+      name:          document.getElementById('inp-name').value.trim(),
+      city:          selectedCity || document.getElementById('inp-city').value.trim(),
+      nature:        selectedNature,
+      phone:         document.getElementById('inp-phone').value.trim(),
+      status:        selectedStatus,
+      bagSize:       document.getElementById('inp-bagSize').value.trim(),
+      bagWeight:     document.getElementById('inp-bagWeight').value.trim(),
+      gsm:           document.getElementById('inp-gsm').value.trim(),
+      print:         selectedPrint,
+      lamination:    selectedLamination,
+      liner:         selectedLiner,
+      fabricQuality: selectedFabric,
+      companyNotes:  document.getElementById('inp-notes').value.trim(),
     };
   }
 
   function validate(vals) {
     let ok = true;
-    if (!vals.name) {
-      document.getElementById('err-name').classList.remove('hidden');
-      ok = false;
-    } else {
-      document.getElementById('err-name').classList.add('hidden');
-    }
-    if (!vals.city) {
-      document.getElementById('err-city').classList.remove('hidden');
-      ok = false;
-    } else {
-      document.getElementById('err-city').classList.add('hidden');
-    }
+    document.getElementById('err-name').classList.toggle('hidden', !!vals.name);
+    document.getElementById('err-city').classList.toggle('hidden', !!vals.city);
+    if (!vals.name || !vals.city) ok = false;
     return ok;
   }
 
-  function saveAndMaybeReminder(vals) {
+  function doSave(vals) {
     const company = addCompany(vals);
-    const doSchedule = document.getElementById('schedule-toggle').checked;
-    if (doSchedule) {
+    if (document.getElementById('schedule-toggle').checked) {
       const date = document.getElementById('inp-followup-date').value;
       const time = document.getElementById('inp-followup-time').value || '10:00';
       if (date) addReminder(company.id, date, time);
@@ -208,33 +275,32 @@
   }
 
   function handleSave() {
-    const vals = getFormValues();
+    const vals = getVals();
     if (!validate(vals)) return;
-    saveAndMaybeReminder(vals);
-    const msg = document.getElementById('success-msg');
-    msg.classList.remove('hidden');
+    doSave(vals);
+    document.getElementById('success-msg').classList.remove('hidden');
     setTimeout(() => { window.location.href = 'data.html'; }, 800);
   }
 
   function handleSaveAndAdd() {
-    const vals = getFormValues();
+    const vals = getVals();
     if (!validate(vals)) return;
-    saveAndMaybeReminder(vals);
-
-    // Flash success
+    doSave(vals);
+    // Flash & reset
     const msg = document.getElementById('success-msg');
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 1200);
-
-    // Reset form
-    document.getElementById('inp-name').value  = '';
-    document.getElementById('inp-city').value  = '';
-    document.getElementById('inp-phone').value = '';
+    document.getElementById('inp-name').value   = '';
+    document.getElementById('inp-city').value   = '';
+    document.getElementById('inp-phone').value  = '';
+    document.getElementById('inp-bagSize').value   = '';
+    document.getElementById('inp-bagWeight').value = '';
+    document.getElementById('inp-gsm').value    = '';
+    document.getElementById('inp-notes').value  = '';
     document.getElementById('schedule-toggle').checked = false;
     document.getElementById('schedule-fields').classList.add('hidden');
-    document.getElementById('inp-followup-date').value = todayStr();
-    document.getElementById('inp-followup-time').value = '10:00';
-    selectedCity = ''; selectedNature = 'Manufacturer'; selectedStatus = 'Untouch';
+    selectedCity=''; selectedNature='Manufacturer'; selectedStatus='Untouch';
+    selectedPrint=''; selectedLamination=''; selectedLiner=''; selectedFabric='';
     buildChips();
     document.getElementById('inp-name').focus();
   }
