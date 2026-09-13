@@ -291,3 +291,115 @@ function qsa(sel, ctx = document) { return [...ctx.querySelectorAll(sel)]; }
 function show(el) { if (el) el.classList.remove('hidden'); }
 function hide(el) { if (el) el.classList.add('hidden'); }
 function goTo(page) { window.location.href = page; }
+
+// ============================================================
+//  🔔 NOTIFICATIONS – Phone popup alerts for reminders
+// ============================================================
+
+// ── Register Service Worker ──
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    return reg;
+  } catch (e) {
+    // Try relative path (for GitHub Pages subfolders)
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      return reg;
+    } catch (e2) { return null; }
+  }
+}
+
+// ── Ask user permission for notifications ──
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied')  return false;
+
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+// ── Schedule notifications for today's reminders ──
+async function scheduleReminderNotifications() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  // Wait for service worker to be ready
+  let swReg = null;
+  if ('serviceWorker' in navigator) {
+    try { swReg = await navigator.serviceWorker.ready; } catch(e) {}
+  }
+
+  const db     = loadData();
+  const today  = getTodayReminders();
+  const now    = new Date();
+
+  today.forEach(reminder => {
+    const company = db.companies.find(c => c.id === reminder.companyId);
+    if (!company) return;
+
+    const [h, m] = (reminder.time || '10:00').split(':').map(Number);
+    const fireAt  = new Date();
+    fireAt.setHours(h, m, 0, 0);
+
+    const delay = fireAt - now;
+
+    // Only schedule if it's in the next 24 hours (and hasn't passed)
+    if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return;
+
+    console.log(`📅 Notification scheduled for ${company.name} at ${reminder.time}`);
+
+    setTimeout(() => {
+      const title = `📞 Follow-up: ${company.name}`;
+      const body  = `Time to call ${company.name} · ${company.city} · ${company.nature}`;
+
+      if (swReg && navigator.serviceWorker.controller) {
+        // Send via service worker (works in background)
+        navigator.serviceWorker.controller.postMessage({
+          type:      'SHOW_NOTIFICATION',
+          title:     title,
+          body:      body,
+          reminderId: reminder.id,
+          companyId:  company.id,
+        });
+      } else {
+        // Direct notification (only when app is open)
+        try {
+          new Notification(title, {
+            body:             body,
+            icon:             '../assets/icon-192.png',
+            badge:            '../assets/icon-192.png',
+            vibrate:          [300, 100, 300],
+            tag:              reminder.id,
+            requireInteraction: true,
+          });
+        } catch(e) {}
+      }
+    }, delay);
+  });
+}
+
+// ── Setup notifications (call this on every page load) ──
+async function setupNotifications() {
+  await registerSW();
+
+  // Ask permission if not decided yet
+  if ('Notification' in window && Notification.permission === 'default') {
+    // Small delay so page loads first
+    setTimeout(async () => {
+      await requestNotificationPermission();
+      await scheduleReminderNotifications();
+    }, 2000);
+  } else {
+    await scheduleReminderNotifications();
+  }
+}
+
+// Auto-run when script loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setupNotifications());
+} else {
+  setupNotifications();
+}
