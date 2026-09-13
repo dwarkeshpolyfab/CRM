@@ -14,34 +14,31 @@
   <link rel="stylesheet" href="../assets/style.css" />
   <link rel="icon" href="../assets/icon-192.png" type="image/png" />
   <style>
-    /* ── Bag spec grid ── */
-    .spec-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-    .spec-item { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px; }
-    .spec-label { font-size:9px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
-    .spec-value { font-size:13px; font-weight:700; color:#111827; }
-    .spec-value.empty { color:#d1d5db; font-style:italic; font-weight:400; }
-    /* ── Call / WA big buttons ── */
-    .contact-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 16px 0; }
-    .btn-call { display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;background:#2563eb;color:#fff;font-size:14px;font-weight:700;text-decoration:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent; }
-    .btn-wa   { display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;background:#25d366;color:#fff;font-size:14px;font-weight:700;text-decoration:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent; }
-    .btn-call:active { background:#1d4ed8; }
-    .btn-wa:active   { background:#128c7e; }
-    /* ── Edit bag specs inline ── */
-    .edit-spec-btn { background:none;border:1px solid #d1d5db;border-radius:8px;font-size:11px;color:#6b7280;padding:4px 10px;cursor:pointer;float:right; }
+    .spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .spec-item{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px}
+    .spec-item.full{grid-column:1/-1}
+    .spec-label{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .spec-value{font-size:13px;font-weight:700;color:#111827;line-height:1.4}
+    .spec-empty{color:#d1d5db;font-style:italic;font-weight:400;font-size:12px}
+    .contact-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 16px 0}
+    .btn-call{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:14px;background:#2563eb;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:14px;background:#25d366;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .btn-call:active{background:#1d4ed8}.btn-wa:active{background:#128c7e}
+    .edit-top-btn{background:none;border:1px solid #d1d5db;border-radius:8px;font-size:11px;color:#6b7280;padding:4px 10px;cursor:pointer}
+    .liner-extra-view{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:8px;margin-top:4px;font-size:11px;color:#92400e}
+    .edit-chip{display:inline-block;padding:5px 10px;border-radius:20px;border:1.5px solid #d1d5db;background:#fff;font-size:11px;cursor:pointer;margin:3px;font-weight:600;color:#374151}
+    .edit-chip.sel{background:#1a365d;color:#fff;border-color:#1a365d}
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Company Header -->
+  <!-- Header -->
   <div class="company-detail-header" id="cd-header">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       <button class="back-btn" onclick="history.back()">&#8592;</button>
-      <h1 class="header-title">Company Detail</h1>
-      <button onclick="confirmDelete()"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:none;cursor:pointer">
-        🗑️
-      </button>
+      <h1 class="header-title" style="flex:1">Company Detail</h1>
+      <button onclick="confirmDelete()" style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:16px;border:none;cursor:pointer">🗑️</button>
     </div>
     <div style="display:flex;align-items:center;gap:16px">
       <div class="cd-avatar" id="cd-avatar">??</div>
@@ -52,27 +49,21 @@
     </div>
   </div>
 
-  <!-- ── CALL & WHATSAPP BUTTONS ── -->
+  <!-- CALL & WHATSAPP -->
   <div class="contact-btns" id="contact-btns" style="display:none">
-    <button class="btn-call" id="btn-call" onclick="">
-      <span style="font-size:20px">📞</span> Call Now
-    </button>
-    <button class="btn-wa" id="btn-wa" onclick="">
-      <span style="font-size:20px">💬</span> WhatsApp
-    </button>
+    <button class="btn-call" id="btn-call"><span style="font-size:22px">📞</span> Call Now</button>
+    <button class="btn-wa"   id="btn-wa"  ><span style="font-size:22px">💬</span> WhatsApp</button>
   </div>
   <div id="no-phone-note" style="display:none;margin:10px 16px 0;font-size:11px;color:#ef4444;text-align:center">
-    ⚠️ No phone number saved — <a href="#" id="edit-phone-link" style="color:#2563eb;font-weight:700">Add phone number</a>
+    ⚠️ No phone number — <a href="#" onclick="toggleEditSpecs();return false;" style="color:#2563eb;font-weight:700">Add phone number</a>
   </div>
 
-  <!-- ── STATUS ROW ── -->
+  <!-- STATUS ROW -->
   <div class="cd-status-row">
     <div>
       <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Status</p>
       <div class="dropdown-wrap">
-        <button class="status-badge" id="status-btn" onclick="toggleStatus()">
-          — <span style="font-size:8px">▼</span>
-        </button>
+        <button class="status-badge" id="status-btn" onclick="toggleStatus()">— <span style="font-size:8px">▼</span></button>
         <div class="dropdown-list hidden" id="status-dropdown"></div>
         <div class="hidden" id="status-backdrop" onclick="closeStatus()" style="position:fixed;inset:0;z-index:20"></div>
       </div>
@@ -80,133 +71,138 @@
     <button class="btn btn-primary btn-sm" onclick="toggleAddReminder()">+ Add Reminder</button>
   </div>
 
-  <!-- ── ADD REMINDER ── -->
+  <!-- ADD REMINDER -->
   <div class="hidden" id="add-reminder-box" style="margin:12px 16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px">
-    <p style="font-size:12px;font-weight:700;color:#1a365d;margin-bottom:10px">📅 Schedule Follow-up Reminder</p>
+    <p style="font-size:12px;font-weight:700;color:#1a365d;margin-bottom:10px">📅 Schedule Reminder</p>
     <div class="grid-2">
       <input type="date" class="input input-sm" id="new-reminder-date" />
       <input type="time" class="input input-sm" id="new-reminder-time" value="10:00" />
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelReminder()">Cancel</button>
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveNewReminder()">Save Reminder</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveNewReminder()">Save</button>
     </div>
   </div>
 
-  <!-- PAGE BODY -->
   <div class="page-body" style="padding-top:14px">
 
     <!-- ── BAG SPECIFICATIONS ── -->
     <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <p style="font-size:12px;font-weight:800;color:#1a365d">🛍️ Bag Specifications</p>
-        <button class="edit-spec-btn" onclick="toggleEditSpecs()">✏️ Edit</button>
+        <button class="edit-top-btn" onclick="toggleEditSpecs()">✏️ Edit</button>
       </div>
 
       <!-- VIEW MODE -->
       <div id="spec-view">
         <div class="spec-grid">
-          <div class="spec-item">
-            <div class="spec-label">Bag Size</div>
-            <div class="spec-value" id="sv-bagSize"><span class="empty">Not set</span></div>
-          </div>
-          <div class="spec-item">
-            <div class="spec-label">Weight</div>
-            <div class="spec-value" id="sv-bagWeight"><span class="empty">Not set</span></div>
-          </div>
-          <div class="spec-item">
-            <div class="spec-label">GSM</div>
-            <div class="spec-value" id="sv-gsm"><span class="empty">Not set</span></div>
-          </div>
-          <div class="spec-item">
-            <div class="spec-label">Print</div>
-            <div class="spec-value" id="sv-print"><span class="empty">Not set</span></div>
-          </div>
-          <div class="spec-item">
-            <div class="spec-label">Lamination</div>
-            <div class="spec-value" id="sv-lamination"><span class="empty">Not set</span></div>
-          </div>
-          <div class="spec-item">
+          <div class="spec-item"><div class="spec-label">Bag Size</div><div class="spec-value" id="sv-bagSize"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item"><div class="spec-label">Bag Weight</div><div class="spec-value" id="sv-bagWeight"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item"><div class="spec-label">GSM</div><div class="spec-value" id="sv-gsm"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item"><div class="spec-label">Lamination</div><div class="spec-value" id="sv-lamination"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item"><div class="spec-label">Printing</div><div class="spec-value" id="sv-print"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value" id="sv-fabric"><span class="spec-empty">—</span></div></div>
+          <div class="spec-item full" id="sv-liner-wrap">
             <div class="spec-label">Liner</div>
-            <div class="spec-value" id="sv-liner"><span class="empty">Not set</span></div>
+            <div class="spec-value" id="sv-liner"><span class="spec-empty">—</span></div>
+            <div id="sv-liner-extra" style="display:none">
+              <div class="liner-extra-view" id="sv-liner-details"></div>
+            </div>
           </div>
-        </div>
-        <div class="spec-item" style="margin-top:10px">
-          <div class="spec-label">Fabric Quality</div>
-          <div class="spec-value" id="sv-fabric"><span class="empty">Not set</span></div>
+          <div class="spec-item full" id="sv-qty-wrap" style="display:none">
+            <div class="spec-label">Approx Quantity</div>
+            <div class="spec-value" id="sv-quantity"></div>
+          </div>
         </div>
         <div id="sv-notes-wrap" style="margin-top:10px;display:none">
-          <div class="spec-label">Notes</div>
-          <p style="font-size:13px;color:#374151;margin-top:3px;line-height:1.5" id="sv-notes"></p>
+          <div class="spec-label" style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Extra Note</div>
+          <p style="font-size:13px;color:#374151;margin-top:4px;line-height:1.6" id="sv-notes"></p>
         </div>
       </div>
 
       <!-- EDIT MODE -->
       <div id="spec-edit" style="display:none;margin-top:12px">
+
+        <div class="field">
+          <label class="field-label">📞 Phone Number</label>
+          <input type="tel" class="input input-sm" id="edit-phone" placeholder="e.g. 9876543210" />
+        </div>
+
         <div class="grid-2">
           <div class="field">
             <label class="field-label">Bag Size</label>
-            <input type="text" class="input input-sm" id="edit-bagSize" placeholder='e.g. 12x18 inch' />
+            <input type="text" class="input input-sm" id="edit-bagSize" placeholder="e.g. 24x36" />
           </div>
           <div class="field">
-            <label class="field-label">Weight</label>
-            <input type="text" class="input input-sm" id="edit-bagWeight" placeholder="e.g. 50g" />
+            <label class="field-label">Bag Weight</label>
+            <input type="text" class="input input-sm" id="edit-bagWeight" placeholder="e.g. 60 gram" />
           </div>
         </div>
+
         <div class="field">
           <label class="field-label">GSM</label>
-          <input type="text" class="input input-sm" id="edit-gsm" placeholder="e.g. 120 GSM" />
+          <input type="text" class="input input-sm" id="edit-gsm" placeholder="e.g. 2.5" />
         </div>
-        <div class="field">
-          <label class="field-label">Print</label>
-          <select class="input input-sm" id="edit-print">
-            <option value="">Select...</option>
-          </select>
-        </div>
+
         <div class="field">
           <label class="field-label">Lamination</label>
-          <select class="input input-sm" id="edit-lamination">
-            <option value="">Select...</option>
-          </select>
+          <div id="edit-lamination-chips" class="chip-group"></div>
         </div>
+
+        <div class="field">
+          <label class="field-label">Printing</label>
+          <div id="edit-print-chips" class="chip-group"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Fabric</label>
+          <div id="edit-fabric-chips" class="chip-group"></div>
+          <div id="edit-fabric-other-wrap" class="hidden" style="margin-top:8px">
+            <input type="text" class="input input-sm" id="edit-fabricOther" placeholder="Describe fabric..." />
+          </div>
+        </div>
+
         <div class="field">
           <label class="field-label">Liner</label>
-          <select class="input input-sm" id="edit-liner">
-            <option value="">Select...</option>
-          </select>
+          <div id="edit-liner-chips" class="chip-group"></div>
+          <div id="edit-liner-extra" class="liner-extra hidden" style="margin-top:8px">
+            <div class="field" style="margin-top:0">
+              <label class="field-label">Stich Type</label>
+              <div id="edit-liner-stich-chips" class="chip-group"></div>
+            </div>
+            <div class="field">
+              <label class="field-label">Liner Weight (gram)</label>
+              <input type="text" class="input input-sm" id="edit-linerGram" placeholder="e.g. 20 gram" />
+            </div>
+          </div>
         </div>
+
         <div class="field">
-          <label class="field-label">Fabric Quality</label>
-          <select class="input input-sm" id="edit-fabric">
-            <option value="">Select...</option>
-          </select>
+          <label class="field-label">Approx Quantity <span style="font-size:10px;color:#9ca3af">(optional)</span></label>
+          <input type="text" class="input input-sm" id="edit-quantity" placeholder="e.g. 5000 bags / month" />
         </div>
+
         <div class="field">
-          <label class="field-label">Phone Number</label>
-          <input type="tel" class="input input-sm" id="edit-phone" placeholder="e.g. 9876543210" />
+          <label class="field-label">Extra Note</label>
+          <textarea class="textarea" id="edit-notes" style="min-height:60px" placeholder="Any extra details..."></textarea>
         </div>
-        <div class="field">
-          <label class="field-label">Notes</label>
-          <textarea class="textarea" id="edit-notes" style="min-height:60px" placeholder="Any notes..."></textarea>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
+
+        <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelEditSpecs()">Cancel</button>
           <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveSpecs()">✓ Save</button>
         </div>
       </div>
     </div>
 
-    <!-- ── PENDING REMINDERS ── -->
+    <!-- PENDING REMINDERS -->
     <div id="pending-section" class="hidden">
       <p class="section-label">📅 Upcoming Reminders</p>
       <div id="pending-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
     </div>
 
-    <!-- ── ACTIVITY HISTORY ── -->
-    <div>
-      <p class="section-label">📝 Activity History</p>
-      <div id="activity-list"></div>
-    </div>
+    <!-- ACTIVITY HISTORY -->
+    <p class="section-label">📝 Activity History</p>
+    <div id="activity-list"></div>
 
   </div>
 </div>
@@ -216,7 +212,7 @@
   <div class="confirm-box">
     <span style="font-size:48px;display:block;margin-bottom:12px">⚠️</span>
     <h3 style="font-size:15px;font-weight:800;margin-bottom:6px">Delete Company?</h3>
-    <p style="font-size:12px;color:#6b7280;margin-bottom:20px" id="delete-text">This will delete the company and all its data.</p>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:20px" id="delete-text">Cannot be undone.</p>
     <div style="display:flex;gap:10px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeDeleteConfirm()">Cancel</button>
       <button class="btn btn-danger" style="flex:1" onclick="doDelete()">Delete</button>
@@ -226,203 +222,224 @@
 
 <script src="../assets/app.js"></script>
 <script>
-  const params    = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
   const companyId = params.get('id');
-  let editOpen    = false;
 
-  // Populate select dropdowns
-  function buildSelects() {
-    const defs = [
-      ['edit-print',      BAG_PRINT_OPTIONS],
-      ['edit-lamination', BAG_LAMINATION_OPTIONS],
-      ['edit-liner',      BAG_LINER_OPTIONS],
-      ['edit-fabric',     BAG_FABRIC_OPTIONS],
-    ];
-    defs.forEach(([id, opts]) => {
-      const sel = document.getElementById(id);
-      sel.innerHTML = '<option value="">Select...</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
-    });
+  // Edit state
+  let eSelLamination='', eSelPrint='', eSelFabric='', eSelLiner='', eSelLinerStich='';
+
+  // ── Set spec view cell ──
+  function setSpec(id, val) {
+    const el = document.getElementById(id);
+    if (val) { el.textContent = val; }
+    else      { el.innerHTML = '<span class="spec-empty">—</span>'; }
   }
 
+  // ── Load & render company ──
   function loadCompany() {
-    const company = getCompany(companyId);
-    if (!company) {
-      document.getElementById('cd-header').innerHTML = `
-        <div style="text-align:center;padding:40px 20px">
-          <span style="font-size:48px;display:block;margin-bottom:12px">🔍</span>
-          <p style="font-size:14px;font-weight:700;color:#4b5563">Company not found</p>
-          <a href="data.html" style="font-size:12px;color:#2563eb;font-weight:600;margin-top:8px;display:block">← Back to Data</a>
-        </div>`;
+    const c = getCompany(companyId);
+    if (!c) {
+      document.getElementById('cd-header').innerHTML =
+        '<div style="text-align:center;padding:40px"><p style="font-size:14px;font-weight:700;color:#4b5563">Company not found</p><a href="data.html" style="font-size:12px;color:#2563eb">← Back</a></div>';
       return;
     }
 
-    document.title = company.name + ' – DP CRM';
-    document.getElementById('cd-avatar').textContent = initials(company.name);
-    document.getElementById('cd-name').textContent   = company.name;
-    document.getElementById('cd-meta').textContent   = `📍 ${company.city}   🏭 ${company.nature}`;
+    document.title = c.name + ' – DP CRM';
+    document.getElementById('cd-avatar').textContent = initials(c.name);
+    document.getElementById('cd-name').textContent   = c.name;
+    document.getElementById('cd-meta').textContent   = `📍 ${c.city}   🏭 ${c.nature}`;
 
-    // ── Call & WhatsApp buttons ──
-    if (company.phone) {
-      document.getElementById('contact-btns').style.display = 'grid';
-      document.getElementById('btn-call').onclick = () => callPhone(company.phone);
-      document.getElementById('btn-wa').onclick   = () => openWhatsApp(company.phone, company.name);
-      document.getElementById('no-phone-note').style.display = 'none';
+    // Call / WA
+    if (c.phone) {
+      document.getElementById('contact-btns').style.display='grid';
+      document.getElementById('btn-call').onclick = () => callPhone(c.phone);
+      document.getElementById('btn-wa').onclick   = () => openWhatsApp(c.phone, c.name);
+      document.getElementById('no-phone-note').style.display='none';
     } else {
-      document.getElementById('contact-btns').style.display = 'none';
-      document.getElementById('no-phone-note').style.display = 'block';
+      document.getElementById('contact-btns').style.display='none';
+      document.getElementById('no-phone-note').style.display='block';
     }
 
-    // Status button
-    const statusBtn = document.getElementById('status-btn');
-    statusBtn.className = 'status-badge ' + (STATUS_CLASS[company.status] || '');
-    statusBtn.innerHTML = company.status + ' <span style="font-size:8px">▼</span>';
-
+    // Status
+    const sb = document.getElementById('status-btn');
+    sb.className = 'status-badge ' + (STATUS_CLASS[c.status]||'');
+    sb.innerHTML = c.status + ' <span style="font-size:8px">▼</span>';
     document.getElementById('status-dropdown').innerHTML = ALL_STATUSES.map(s => `
-      <div class="dropdown-item ${s===company.status?'current':''}" onclick="doChangeStatus('${s}')">
-        <span class="dropdown-dot ${STATUS_DOT[s]}"></span> ${s}
-        ${s===company.status?'<span style="margin-left:auto;color:#22c55e">✓</span>':''}
+      <div class="dropdown-item ${s===c.status?'current':''}" onclick="doChangeStatus('${s}')">
+        <span class="dropdown-dot ${STATUS_DOT[s]}"></span>${s}
+        ${s===c.status?'<span style="margin-left:auto;color:#22c55e">✓</span>':''}
       </div>`).join('');
-
     document.getElementById('new-reminder-date').value = todayStr();
 
-    // ── Bag specs VIEW ──
-    function setSpec(id, val) {
-      const el = document.getElementById(id);
-      if (val) { el.textContent = val; el.classList.remove('empty'); }
-      else      { el.innerHTML = '<span class="empty">Not set</span>'; }
-    }
-    setSpec('sv-bagSize',    company.bagSize);
-    setSpec('sv-bagWeight',  company.bagWeight);
-    setSpec('sv-gsm',        company.gsm);
-    setSpec('sv-print',      company.print);
-    setSpec('sv-lamination', company.lamination);
-    setSpec('sv-liner',      company.liner);
-    setSpec('sv-fabric',     company.fabricQuality);
-    if (company.companyNotes) {
-      document.getElementById('sv-notes').textContent = company.companyNotes;
-      document.getElementById('sv-notes-wrap').style.display = 'block';
+    // Bag spec view
+    setSpec('sv-bagSize',   c.bagSize);
+    setSpec('sv-bagWeight', c.bagWeight);
+    setSpec('sv-gsm',       c.gsm);
+    setSpec('sv-lamination',c.lamination);
+    setSpec('sv-print',     c.print);
+    setSpec('sv-fabric',    c.fabric || c.fabricQuality);
+
+    // Liner view with extra details
+    if (c.liner) {
+      setSpec('sv-liner', c.liner);
+      if (c.liner !== 'No' && (c.linerStich || c.linerGram)) {
+        const details = [
+          c.linerStich ? `Stich: ${c.linerStich}` : '',
+          c.linerGram  ? `Weight: ${c.linerGram}` : '',
+        ].filter(Boolean).join(' · ');
+        document.getElementById('sv-liner-details').textContent = details;
+        document.getElementById('sv-liner-extra').style.display = 'block';
+      } else {
+        document.getElementById('sv-liner-extra').style.display = 'none';
+      }
     } else {
-      document.getElementById('sv-notes-wrap').style.display = 'none';
+      document.getElementById('sv-liner').innerHTML = '<span class="spec-empty">—</span>';
+      document.getElementById('sv-liner-extra').style.display = 'none';
     }
 
-    // ── Pending reminders ──
-    const db = loadData();
-    const pending = db.reminders.filter(r => r.companyId === companyId && r.status === 'Pending')
-      .sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    // Quantity
+    if (c.quantity) {
+      document.getElementById('sv-qty-wrap').style.display='block';
+      document.getElementById('sv-quantity').textContent = c.quantity;
+    } else {
+      document.getElementById('sv-qty-wrap').style.display='none';
+    }
 
-    if (pending.length > 0) {
+    // Notes
+    if (c.companyNotes) {
+      document.getElementById('sv-notes').textContent = c.companyNotes;
+      document.getElementById('sv-notes-wrap').style.display='block';
+    } else {
+      document.getElementById('sv-notes-wrap').style.display='none';
+    }
+
+    // Pending reminders
+    const db = loadData();
+    const pending = db.reminders.filter(r=>r.companyId===companyId&&r.status==='Pending').sort((a,b)=>a.date.localeCompare(b.date));
+    if (pending.length>0) {
       document.getElementById('pending-section').classList.remove('hidden');
-      document.getElementById('pending-list').innerHTML = pending.map(r => `
-        <div class="reminder-pill">
-          <span class="pill-date">📅 ${fmtDate(r.date)} at ${fmtTime(r.time)}</span>
-          <span class="pill-status">Pending</span>
-        </div>`).join('');
+      document.getElementById('pending-list').innerHTML = pending.map(r=>`
+        <div class="reminder-pill"><span class="pill-date">📅 ${fmtDate(r.date)} at ${fmtTime(r.time)}</span><span class="pill-status">Pending</span></div>`).join('');
     } else {
       document.getElementById('pending-section').classList.add('hidden');
     }
 
-    // ── Activity history ──
-    const activities = getCompanyActivities(companyId);
-    const actList    = document.getElementById('activity-list');
-    if (activities.length === 0) {
-      actList.innerHTML = `
-        <div class="card" style="text-align:center;padding:40px 20px">
-          <span style="font-size:40px;display:block;margin-bottom:10px">📭</span>
-          <p style="font-size:12px;font-weight:700;color:#6b7280">No activity yet</p>
-          <p style="font-size:10px;color:#9ca3af;margin-top:4px">Use Reminders to log activities</p>
-        </div>`;
-    } else {
-      actList.innerHTML = activities.map(act => `
-        <div class="activity-card fade-in" style="margin-bottom:10px">
-          <div class="activity-head">
-            <div class="activity-type">
-              <span>${ACTIVITY_ICON[act.type]||'📌'}</span>
-              <span>${act.type}</span>
+    // Activity history
+    const acts = getCompanyActivities(companyId);
+    document.getElementById('activity-list').innerHTML = acts.length===0
+      ? `<div class="card" style="text-align:center;padding:32px 20px"><span style="font-size:40px;display:block;margin-bottom:10px">📭</span><p style="font-size:12px;font-weight:700;color:#6b7280">No activity yet</p></div>`
+      : acts.map(a=>`
+          <div class="activity-card fade-in" style="margin-bottom:10px">
+            <div class="activity-head">
+              <div class="activity-type"><span>${ACTIVITY_ICON[a.type]||'📌'}</span><span>${a.type}</span></div>
+              <span class="activity-date">${fmtDate(a.createdAt.split('T')[0])}</span>
             </div>
-            <span class="activity-date">${fmtDate(act.createdAt.split('T')[0])}</span>
-          </div>
-          <p class="activity-notes">${act.notes}</p>
-          ${act.nextFollowUpDate?`<p class="activity-next">📅 Next: ${fmtDate(act.nextFollowUpDate)} at ${fmtTime(act.nextFollowUpTime)}</p>`:''}
-        </div>`).join('');
+            <p class="activity-notes">${a.notes}</p>
+            ${a.nextFollowUpDate?`<p class="activity-next">📅 Next: ${fmtDate(a.nextFollowUpDate)} at ${fmtTime(a.nextFollowUpTime)}</p>`:''}
+          </div>`).join('');
+  }
+
+  // ── Edit spec chips builder ──
+  function buildEditChips() {
+    const mkChip = (val, sel, field) =>
+      `<button class="chip ${val===sel?'selected':''}" style="font-size:11px" onclick="ePick('${field}','${val}')">${val}</button>`;
+
+    document.getElementById('edit-lamination-chips').innerHTML = BAG_LAMINATION_OPTIONS.map(l=>mkChip(l,eSelLamination,'lamination')).join('');
+    document.getElementById('edit-print-chips').innerHTML      = BAG_PRINT_OPTIONS.map(p=>mkChip(p,eSelPrint,'print')).join('');
+    document.getElementById('edit-fabric-chips').innerHTML     = BAG_FABRIC_OPTIONS.map(f=>mkChip(f,eSelFabric,'fabric')).join('');
+    document.getElementById('edit-liner-chips').innerHTML      = BAG_LINER_OPTIONS.map(l=>mkChip(l,eSelLiner,'liner')).join('');
+
+    // Fabric Other
+    document.getElementById('edit-fabric-other-wrap').classList.toggle('hidden', eSelFabric!=='Other');
+
+    // Liner extra
+    const linerExtra = document.getElementById('edit-liner-extra');
+    if (eSelLiner && eSelLiner!=='No') {
+      linerExtra.classList.remove('hidden');
+      document.getElementById('edit-liner-stich-chips').innerHTML = BAG_LINER_STICH_OPTIONS.map(s=>mkChip(s,eSelLinerStich,'linerStich')).join('');
+    } else {
+      linerExtra.classList.add('hidden');
     }
   }
 
-  // ── Spec edit ──
+  function ePick(field, val) {
+    if (field==='lamination') eSelLamination = eSelLamination===val?'':val;
+    if (field==='print')      eSelPrint      = eSelPrint===val?'':val;
+    if (field==='fabric')     { eSelFabric   = eSelFabric===val?'':val; }
+    if (field==='liner')      { eSelLiner    = eSelLiner===val?'':val; if(eSelLiner==='No') eSelLinerStich=''; }
+    if (field==='linerStich') eSelLinerStich = eSelLinerStich===val?'':val;
+    buildEditChips();
+  }
+
   function toggleEditSpecs() {
-    const company = getCompany(companyId);
-    if (!company) return;
-    editOpen = true;
-    document.getElementById('spec-view').style.display = 'none';
-    document.getElementById('spec-edit').style.display = 'block';
-    document.getElementById('edit-bagSize').value    = company.bagSize    || '';
-    document.getElementById('edit-bagWeight').value  = company.bagWeight  || '';
-    document.getElementById('edit-gsm').value        = company.gsm        || '';
-    document.getElementById('edit-print').value      = company.print      || '';
-    document.getElementById('edit-lamination').value = company.lamination || '';
-    document.getElementById('edit-liner').value      = company.liner      || '';
-    document.getElementById('edit-fabric').value     = company.fabricQuality || '';
-    document.getElementById('edit-phone').value      = company.phone      || '';
-    document.getElementById('edit-notes').value      = company.companyNotes || '';
+    const c = getCompany(companyId); if (!c) return;
+    eSelLamination  = c.lamination  || '';
+    eSelPrint       = c.print       || '';
+    eSelFabric      = (c.fabric||c.fabricQuality||'').startsWith('Other:') ? 'Other' : (c.fabric||c.fabricQuality||'');
+    eSelLiner       = c.liner       || '';
+    eSelLinerStich  = c.linerStich  || '';
+
+    document.getElementById('edit-phone').value      = c.phone      || '';
+    document.getElementById('edit-bagSize').value    = c.bagSize    || '';
+    document.getElementById('edit-bagWeight').value  = c.bagWeight  || '';
+    document.getElementById('edit-gsm').value        = c.gsm        || '';
+    document.getElementById('edit-linerGram').value  = c.linerGram  || '';
+    document.getElementById('edit-quantity').value   = c.quantity   || '';
+    document.getElementById('edit-notes').value      = c.companyNotes|| '';
+
+    const fabricStr = c.fabric || c.fabricQuality || '';
+    document.getElementById('edit-fabricOther').value = fabricStr.startsWith('Other:') ? fabricStr.replace('Other: ','').replace('Other:','') : '';
+
+    buildEditChips();
+    document.getElementById('spec-view').style.display='none';
+    document.getElementById('spec-edit').style.display='block';
   }
+
   function cancelEditSpecs() {
-    editOpen = false;
-    document.getElementById('spec-view').style.display = 'block';
-    document.getElementById('spec-edit').style.display = 'none';
+    document.getElementById('spec-view').style.display='block';
+    document.getElementById('spec-edit').style.display='none';
   }
+
   function saveSpecs() {
+    const fabricVal = eSelFabric==='Other'
+      ? ('Other: '+document.getElementById('edit-fabricOther').value.trim())
+      : eSelFabric;
+    const linerGram  = eSelLiner&&eSelLiner!=='No' ? document.getElementById('edit-linerGram').value.trim() : '';
+    const linerStich = eSelLiner&&eSelLiner!=='No' ? eSelLinerStich : '';
+
     updateCompany(companyId, {
-      bagSize:       document.getElementById('edit-bagSize').value.trim(),
-      bagWeight:     document.getElementById('edit-bagWeight').value.trim(),
-      gsm:           document.getElementById('edit-gsm').value.trim(),
-      print:         document.getElementById('edit-print').value,
-      lamination:    document.getElementById('edit-lamination').value,
-      liner:         document.getElementById('edit-liner').value,
-      fabricQuality: document.getElementById('edit-fabric').value,
-      phone:         document.getElementById('edit-phone').value.trim(),
-      companyNotes:  document.getElementById('edit-notes').value.trim(),
+      phone:        document.getElementById('edit-phone').value.trim(),
+      bagSize:      document.getElementById('edit-bagSize').value.trim(),
+      bagWeight:    document.getElementById('edit-bagWeight').value.trim(),
+      gsm:          document.getElementById('edit-gsm').value.trim(),
+      lamination:   eSelLamination,
+      print:        eSelPrint,
+      fabric:       fabricVal,
+      liner:        eSelLiner,
+      linerStich:   linerStich,
+      linerGram:    linerGram,
+      quantity:     document.getElementById('edit-quantity').value.trim(),
+      companyNotes: document.getElementById('edit-notes').value.trim(),
     });
     cancelEditSpecs();
     loadCompany();
   }
 
-  // ── Status ──
-  function toggleStatus() {
-    const dd = document.getElementById('status-dropdown');
-    const bb = document.getElementById('status-backdrop');
-    if (!dd.classList.contains('hidden')) { closeStatus(); return; }
-    dd.classList.remove('hidden'); bb.classList.remove('hidden');
+  // Status, Reminder, Delete handlers
+  function toggleStatus(){const dd=document.getElementById('status-dropdown'),bb=document.getElementById('status-backdrop');if(!dd.classList.contains('hidden')){closeStatus();return;}dd.classList.remove('hidden');bb.classList.remove('hidden');}
+  function closeStatus(){document.getElementById('status-dropdown').classList.add('hidden');document.getElementById('status-backdrop').classList.add('hidden');}
+  function doChangeStatus(s){changeStatus(companyId,s);closeStatus();loadCompany();}
+  function toggleAddReminder(){document.getElementById('add-reminder-box').classList.toggle('hidden');}
+  function cancelReminder(){document.getElementById('add-reminder-box').classList.add('hidden');}
+  function saveNewReminder(){
+    const d=document.getElementById('new-reminder-date').value, t=document.getElementById('new-reminder-time').value||'10:00';
+    if(!d){alert('Please select a date');return;}
+    addReminder(companyId,d,t); document.getElementById('add-reminder-box').classList.add('hidden'); loadCompany();
   }
-  function closeStatus() {
-    document.getElementById('status-dropdown').classList.add('hidden');
-    document.getElementById('status-backdrop').classList.add('hidden');
-  }
-  function doChangeStatus(status) { changeStatus(companyId, status); closeStatus(); loadCompany(); }
+  function confirmDelete(){const c=getCompany(companyId);if(!c)return;document.getElementById('delete-text').textContent=`Delete "${c.name}"? Cannot be undone.`;document.getElementById('delete-overlay').classList.remove('hidden');}
+  function closeDeleteConfirm(){document.getElementById('delete-overlay').classList.add('hidden');}
+  function doDelete(){deleteCompany(companyId);window.location.href='data.html';}
 
-  // ── Reminder ──
-  function toggleAddReminder() {
-    document.getElementById('add-reminder-box').classList.toggle('hidden');
-  }
-  function cancelReminder() { document.getElementById('add-reminder-box').classList.add('hidden'); }
-  function saveNewReminder() {
-    const date = document.getElementById('new-reminder-date').value;
-    const time = document.getElementById('new-reminder-time').value || '10:00';
-    if (!date) { alert('Please select a date'); return; }
-    addReminder(companyId, date, time);
-    document.getElementById('add-reminder-box').classList.add('hidden');
-    loadCompany();
-  }
-
-  // ── Delete ──
-  function confirmDelete() {
-    const company = getCompany(companyId);
-    if (!company) return;
-    document.getElementById('delete-text').textContent = `This will delete "${company.name}" and all its data. Cannot be undone.`;
-    document.getElementById('delete-overlay').classList.remove('hidden');
-  }
-  function closeDeleteConfirm() { document.getElementById('delete-overlay').classList.add('hidden'); }
-  function doDelete() { deleteCompany(companyId); window.location.href = 'data.html'; }
-
-  buildSelects();
   loadCompany();
 </script>
 </body>
