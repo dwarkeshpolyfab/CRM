@@ -1,14 +1,114 @@
 // ============================================================
-//  Dwarkesh Polyfab CRM – app.js  (v2 – Full Features)
-//  Data stored in localStorage. Works offline, no server needed.
+//  Dwarkesh Polyfab CRM – app.js  (v3 – Firebase Cloud Sync)
+//  Data syncs across ALL devices via Firebase.
+//  Works offline too – uses localStorage as cache.
 // ============================================================
 
 const STORAGE_KEY = 'dwarkesh_crm_data';
 
+// ════════════════════════════════════════════════════════════
+//  🔥 FIREBASE CONFIG
+//  STEP: Replace the values below with YOUR Firebase config
+//  Get it from: Firebase Console → Project Settings → Your Apps
+// ════════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyCvUABuMqhfs1SpZMdWKQve0418KdmVg38",
+  authDomain:        "dwarkesh-crm.firebaseapp.com",
+  databaseURL:       "https://dwarkesh-crm-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "dwarkesh-crm",
+  storageBucket:     "dwarkesh-crm.firebasestorage.app",
+  messagingSenderId: "513099827589",
+  appId:             "1:513099827589:web:ebb115e569abb2b53c1cec",
+  measurementId:     "G-0MJE1KLNQP"
+};
+
+let _fireDB     = null;  // Firebase database reference
+let _fireReady  = false; // Is Firebase connected?
+let _syncTimer  = null;  // Debounce timer for saves
+
+// ── Initialize Firebase & start listening ──
+function initFirebase() {
+  try {
+    if (typeof firebase === 'undefined') return; // SDK not loaded
+    if (FIREBASE_CONFIG.apiKey.includes('PASTE_YOUR')) return; // Not configured yet
+
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    _fireDB    = firebase.database();
+    _fireReady = true;
+
+    // 🔴 LIVE LISTENER – updates this device when another device saves data
+    _fireDB.ref('crm_data').on('value', snapshot => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      // Convert Firebase objects back to arrays
+      const synced = {
+        companies:  data.companies  ? Object.values(data.companies)  : [],
+        reminders:  data.reminders  ? Object.values(data.reminders)  : [],
+        activities: data.activities ? Object.values(data.activities) : [],
+      };
+
+      // Save to localStorage cache
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(synced));
+
+      // Refresh current page UI automatically
+      if (typeof buildFilters  === 'function') buildFilters();
+      if (typeof renderList    === 'function') renderList();
+      if (typeof loadCompany   === 'function') loadCompany();
+      if (typeof renderPage    === 'function') renderPage();
+
+      // Show sync indicator
+      showSyncBadge('✅ Synced');
+    });
+
+    // Monitor connection state
+    firebase.database().ref('.info/connected').on('value', snap => {
+      if (snap.val() === true) showSyncBadge('☁️ Online');
+      else                     showSyncBadge('📴 Offline');
+    });
+
+    console.log('🔥 Firebase connected!');
+  } catch (e) {
+    console.error('Firebase error:', e);
+  }
+}
+
+// ── Show small sync indicator in top-right ──
+function showSyncBadge(text) {
+  let badge = document.getElementById('_sync_badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = '_sync_badge';
+    badge.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.6);color:#fff;pointer-events:none;transition:opacity .3s';
+    document.body.appendChild(badge);
+  }
+  badge.textContent = text;
+  badge.style.opacity = '1';
+  clearTimeout(badge._hideTimer);
+  badge._hideTimer = setTimeout(() => { badge.style.opacity = '0'; }, 2500);
+}
+
+// ── Save to Firebase (debounced – waits 500ms before sending) ──
+function saveToFirebase(data) {
+  if (!_fireReady || !_fireDB) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    try {
+      const fbData = { companies: {}, reminders: {}, activities: {} };
+      data.companies.forEach(c  => fbData.companies[c.id]   = c);
+      data.reminders.forEach(r  => fbData.reminders[r.id]   = r);
+      data.activities.forEach(a => fbData.activities[a.id]  = a);
+      _fireDB.ref('crm_data').set(fbData);
+    } catch (e) { console.error('Firebase save error:', e); }
+  }, 500);
+}
+
+// ── Default empty data ──
 function defaultData() {
   return { companies: [], reminders: [], activities: [] };
 }
 
+// ── Load from localStorage (instant) ──
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -17,8 +117,10 @@ function loadData() {
   } catch (e) { return defaultData(); }
 }
 
+// ── Save: localStorage immediately + Firebase in background ──
 function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); // instant local save
+  saveToFirebase(data);                                      // background cloud save
 }
 
 function genId() {
@@ -400,7 +502,11 @@ async function setupNotifications() {
 
 // Auto-run when script loads
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setupNotifications());
+  document.addEventListener('DOMContentLoaded', () => {
+    initFirebase();
+    setupNotifications();
+  });
 } else {
+  initFirebase();
   setupNotifications();
 }
