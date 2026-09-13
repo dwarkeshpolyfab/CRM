@@ -79,10 +79,11 @@ const ALL_NATURES  = ['Manufacturer','Trader','Exporter'];
 const ACTIVITY_ICON = { 'Called':'📞', 'Message':'💬', 'Not Touch':'❌' };
 
 // ── Bag Spec Options ──
-const BAG_PRINT_OPTIONS      = ['No Print','1 Color','2 Color','3 Color','4 Color','Full Color'];
-const BAG_LAMINATION_OPTIONS = ['None','BOPP Laminated','Plain Laminated'];
-const BAG_LINER_OPTIONS      = ['None','PP Liner','HDPE Liner','LLDPE Liner'];
-const BAG_FABRIC_OPTIONS     = ['Virgin','Recycled','Mixed'];
+const BAG_LAMINATION_OPTIONS = ['Unlaminated','Milkey','Natural','BOPP'];
+const BAG_PRINT_OPTIONS      = ['No','One Side','Two Side'];
+const BAG_FABRIC_OPTIONS     = ['Gold','Silver','Janta','Blue Patta','Mix Tap','Antislip','Leno Bag','Other'];
+const BAG_LINER_OPTIONS      = ['No','Milkey','Natural','Semi Natural'];
+const BAG_LINER_STICH_OPTIONS= ['Instich','Without Stich'];
 
 // ── Cities list ──
 const CITIES = [
