@@ -1,58 +1,42 @@
 // ============================================================
-//  Dwarkesh Polyfab CRM – app.js
-//  All data is stored in localStorage (browser storage).
-//  Works offline – no internet or server needed.
+//  Dwarkesh Polyfab CRM – app.js  (v2 – Full Features)
+//  Data stored in localStorage. Works offline, no server needed.
 // ============================================================
 
-// ── Storage Key ──
 const STORAGE_KEY = 'dwarkesh_crm_data';
 
-// ── Default Empty Data ──
 function defaultData() {
   return { companies: [], reminders: [], activities: [] };
 }
 
-// ── Load all data from localStorage ──
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultData();
     return JSON.parse(raw);
-  } catch (e) {
-    return defaultData();
-  }
+  } catch (e) { return defaultData(); }
 }
 
-// ── Save all data to localStorage ──
 function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-// ── Generate unique ID ──
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-// ── Today as YYYY-MM-DD ──
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-// ── Tomorrow as YYYY-MM-DD ──
 function tomorrowStr() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
+  const d = new Date(); d.setDate(d.getDate() + 1);
   return d.toISOString().split('T')[0];
 }
 
-// ── Format date to readable "12 Sep 2026" ──
 function fmtDate(dateStr) {
   if (!dateStr) return '—';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
 }
 
-// ── Format relative date ──
 function fmtRelDate(dateStr) {
   if (!dateStr) return '—';
   const t = todayStr(), tom = tomorrowStr();
@@ -63,22 +47,19 @@ function fmtRelDate(dateStr) {
   return fmtDate(dateStr);
 }
 
-// ── Format time "10:30" → "10:30 AM" ──
 function fmtTime(timeStr) {
   if (!timeStr) return '';
   const [h, m] = timeStr.split(':').map(Number);
   const ampm = h >= 12 ? 'PM' : 'AM';
-  const hr = h % 12 || 12;
-  return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`;
+  return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${ampm}`;
 }
 
-// ── Get 2-letter initials from name ──
 function initials(name) {
   if (!name) return '??';
   return name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-// ── Status CSS class helper ──
+// ── Constants ──
 const STATUS_CLASS = {
   'Untouch':           'status-Untouch',
   'Follow-up':         'status-Follow-up',
@@ -95,8 +76,13 @@ const STATUS_DOT = {
 };
 const ALL_STATUSES = ['Untouch','Follow-up','Need to Visit','No Need to Follow','Mature'];
 const ALL_NATURES  = ['Manufacturer','Trader','Exporter'];
-const ALL_ACTIVITY = ['Called','Message','Not Touch'];
-const ACTIVITY_ICON = { 'Called': '📞', 'Message': '💬', 'Not Touch': '❌' };
+const ACTIVITY_ICON = { 'Called':'📞', 'Message':'💬', 'Not Touch':'❌' };
+
+// ── Bag Spec Options ──
+const BAG_PRINT_OPTIONS      = ['No Print','1 Color','2 Color','3 Color','4 Color','Full Color'];
+const BAG_LAMINATION_OPTIONS = ['None','BOPP Laminated','Plain Laminated'];
+const BAG_LINER_OPTIONS      = ['None','PP Liner','HDPE Liner','LLDPE Liner'];
+const BAG_FABRIC_OPTIONS     = ['Virgin','Recycled','Mixed'];
 
 // ── Cities list ──
 const CITIES = [
@@ -108,12 +94,30 @@ const CITIES = [
   'Nagpur','Nashik','Aurangabad','Other'
 ];
 
-// ── CRM Operations ──
+// ── Get all unique cities from saved companies ──
+function getUniqueCities() {
+  const db = loadData();
+  const cities = [...new Set(db.companies.map(c => c.city).filter(Boolean))].sort();
+  return cities;
+}
 
+// ── Company CRUD ──
 function addCompany(data) {
   const db = loadData();
   const now = new Date().toISOString();
-  const company = { id: genId(), ...data, createdAt: now, updatedAt: now };
+  const company = {
+    id: genId(), ...data,
+    // Bag specs (default empty if not provided)
+    bagSize:       data.bagSize       || '',
+    bagWeight:     data.bagWeight     || '',
+    print:         data.print         || '',
+    lamination:    data.lamination    || '',
+    liner:         data.liner         || '',
+    fabricQuality: data.fabricQuality || '',
+    gsm:           data.gsm           || '',
+    companyNotes:  data.companyNotes  || '',
+    createdAt: now, updatedAt: now
+  };
   db.companies.unshift(company);
   saveData(db);
   return company;
@@ -139,20 +143,15 @@ function deleteCompany(id) {
   saveData(db);
 }
 
-function changeStatus(id, status) {
-  updateCompany(id, { status });
-}
+function changeStatus(id, status) { updateCompany(id, { status }); }
 
+// ── Reminders ──
 function addReminder(companyId, date, time) {
   const db = loadData();
   const reminder = { id: genId(), companyId, date, time, status: 'Pending', createdAt: new Date().toISOString() };
   db.reminders.unshift(reminder);
   saveData(db);
   return reminder;
-}
-
-function getReminders() {
-  return loadData().reminders;
 }
 
 function markReminderDone(id) {
@@ -163,25 +162,24 @@ function markReminderDone(id) {
 
 function getTodayReminders() {
   const t = todayStr();
-  return loadData().reminders
-    .filter(r => r.date === t && r.status === 'Pending')
-    .sort((a,b) => a.time.localeCompare(b.time));
+  return loadData().reminders.filter(r => r.date === t && r.status === 'Pending').sort((a,b) => a.time.localeCompare(b.time));
 }
 
 function getMissedReminders() {
   const t = todayStr();
-  return loadData().reminders
-    .filter(r => r.date < t && r.status === 'Pending')
-    .sort((a,b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
+  return loadData().reminders.filter(r => r.date < t && r.status === 'Pending').sort((a,b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
 }
 
 function getTomorrowReminders() {
   const tom = tomorrowStr();
-  return loadData().reminders
-    .filter(r => r.date === tom && r.status === 'Pending')
-    .sort((a,b) => a.time.localeCompare(b.time));
+  return loadData().reminders.filter(r => r.date === tom && r.status === 'Pending').sort((a,b) => a.time.localeCompare(b.time));
 }
 
+function getCounts() {
+  return { today: getTodayReminders().length, missed: getMissedReminders().length, tomorrow: getTomorrowReminders().length };
+}
+
+// ── Activities ──
 function addActivity({ companyId, reminderId, type, notes, nextFollowUpDate, nextFollowUpTime }) {
   const db = loadData();
   const activity = {
@@ -191,45 +189,61 @@ function addActivity({ companyId, reminderId, type, notes, nextFollowUpDate, nex
     createdAt: new Date().toISOString()
   };
   db.activities.unshift(activity);
-
-  // Mark reminder done
   db.reminders = db.reminders.map(r => r.id === reminderId ? { ...r, status: 'Done' } : r);
 
-  // Schedule next follow-up reminder
   if (nextFollowUpDate) {
-    const nextR = {
-      id: genId(), companyId, date: nextFollowUpDate,
-      time: nextFollowUpTime || '10:00', status: 'Pending',
-      createdAt: new Date().toISOString()
-    };
-    db.reminders.unshift(nextR);
-
-    // If company was Untouch, promote to Follow-up
+    db.reminders.unshift({ id: genId(), companyId, date: nextFollowUpDate, time: nextFollowUpTime || '10:00', status: 'Pending', createdAt: new Date().toISOString() });
     db.companies = db.companies.map(c =>
       c.id === companyId && c.status === 'Untouch'
-        ? { ...c, status: 'Follow-up', updatedAt: new Date().toISOString() }
-        : c
+        ? { ...c, status: 'Follow-up', updatedAt: new Date().toISOString() } : c
     );
   }
   saveData(db);
 }
 
 function getCompanyActivities(companyId) {
-  return loadData().activities
-    .filter(a => a.companyId === companyId)
-    .sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  return loadData().activities.filter(a => a.companyId === companyId).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-// ── Counts for badges ──
-function getCounts() {
-  return {
-    today:    getTodayReminders().length,
-    missed:   getMissedReminders().length,
-    tomorrow: getTomorrowReminders().length,
-  };
+// ── 📊 EXPORT TO EXCEL/CSV ──
+function exportToCSV() {
+  const db = loadData();
+  if (db.companies.length === 0) { alert('No companies to export!'); return; }
+
+  const headers = [
+    'Company Name','City','Nature','Phone','Status',
+    'Bag Size','Bag Weight (g)','Print','Lamination','Liner','Fabric Quality','GSM',
+    'Notes','Created Date'
+  ];
+
+  const rows = db.companies.map(c => [
+    c.name         || '',
+    c.city         || '',
+    c.nature       || '',
+    c.phone        || '',
+    c.status       || '',
+    c.bagSize      || '',
+    c.bagWeight    || '',
+    c.print        || '',
+    c.lamination   || '',
+    c.liner        || '',
+    c.fabricQuality|| '',
+    c.gsm          || '',
+    (c.companyNotes|| '').replace(/,/g, ';'),
+    c.createdAt ? c.createdAt.split('T')[0] : ''
+  ].map(v => `"${v}"`));
+
+  const csv = [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `dwarkesh-crm-companies-${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-// ── Export data as JSON file (backup) ──
+// ── 💾 Backup JSON ──
 function exportData() {
   const data = loadData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -241,34 +255,39 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
-// ── Import data from JSON file (restore) ──
+// ── 📂 Restore from JSON ──
 function importData(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
       try {
         const data = JSON.parse(e.target.result);
-        if (!data.companies || !data.reminders || !data.activities) {
-          reject('Invalid backup file');
-          return;
-        }
+        if (!data.companies || !data.reminders || !data.activities) { reject('Invalid backup file'); return; }
         saveData(data);
         resolve(data);
-      } catch {
-        reject('Could not read file');
-      }
+      } catch { reject('Could not read file'); }
     };
     reader.readAsText(file);
   });
 }
 
-// ── DOM Helpers ──
-function qs(sel, parent = document) { return parent.querySelector(sel); }
-function qsa(sel, parent = document) { return [...parent.querySelectorAll(sel)]; }
+// ── 📞 Direct Call ──
+function callPhone(phone) {
+  if (!phone) { alert('No phone number saved for this company.'); return; }
+  window.location.href = 'tel:' + phone.replace(/\s/g, '');
+}
+
+// ── 💬 WhatsApp ──
+function openWhatsApp(phone, name) {
+  if (!phone) { alert('No phone number saved for this company.'); return; }
+  const num = '91' + phone.replace(/\D/g, '');
+  const msg = encodeURIComponent(`Hello, I am calling from Dwarkesh Polyfab regarding your bag requirements.`);
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+}
+
+// ── DOM helpers ──
+function qs(sel, ctx = document)  { return ctx.querySelector(sel); }
+function qsa(sel, ctx = document) { return [...ctx.querySelectorAll(sel)]; }
 function show(el) { if (el) el.classList.remove('hidden'); }
 function hide(el) { if (el) el.classList.add('hidden'); }
-
-// ── Navigate (SPA-like between pages) ──
-function goTo(page) {
-  window.location.href = page;
-}
+function goTo(page) { window.location.href = page; }
