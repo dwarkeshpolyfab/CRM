@@ -388,9 +388,9 @@ function callPhone(phone) {
 // ── 💬 WhatsApp ──
 function openWhatsApp(phone, name) {
   if (!phone) { alert('No phone number saved for this company.'); return; }
-  const num = '91' + phone.replace(/\D/g, '');
-  const msg = encodeURIComponent(`Hello, I am calling from Dwarkesh Polyfab regarding your bag requirements.`);
-  window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 10) clean = '91' + clean;
+  window.open(`https://wa.me/${clean}`, '_blank');
 }
 
 // ── DOM helpers ──
