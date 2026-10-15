@@ -441,7 +441,12 @@
   }
   function confirmDelete(){const c=getCompany(companyId);if(!c)return;document.getElementById('delete-text').textContent=`Delete "${c.name}"? Cannot be undone.`;document.getElementById('delete-overlay').classList.remove('hidden');}
   function closeDeleteConfirm(){document.getElementById('delete-overlay').classList.add('hidden');}
-  function doDelete(){deleteCompany(companyId);window.location.href='data.html';}
+function doDelete() {
+  deleteCompany(companyId);
+  setTimeout(() => {
+    window.location.href = 'data.html';
+  }, 300);
+}
 
   loadCompany();
 </script>
