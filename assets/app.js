@@ -237,19 +237,19 @@ function updateCompany(id, updates) {
   );
   saveData(db);
 }
+
 function deleteCompany(id) {
   const db = loadData();
   db.companies  = db.companies.filter(c => c.id !== id);
   db.reminders  = db.reminders.filter(r => r.companyId !== id);
   db.activities = db.activities.filter(a => a.companyId !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-
-  // Instant direct delete in Firebase (no delay timer)
+  
+  // Instant direct delete in Firebase
   if (_fireReady && _fireDB) {
     _fireDB.ref('crm_data/companies/' + id).remove();
   }
 }
-
 
 function changeStatus(id, status) { updateCompany(id, { status }); }
 
