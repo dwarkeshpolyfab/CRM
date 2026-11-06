@@ -2,176 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#1a365d" />
-  <title>Data – Dwarkesh Polyfab CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>All Data — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="icon" href="../assets/logo.png" type="image/png" />
+  <meta name="theme-color" content="#0f172a" />
 </head>
 <body>
 
-<div class="app">
-
   <!-- Header -->
-  <div class="header header-blue" style="flex-direction:column;gap:10px;align-items:stretch">
-    <div style="display:flex;align-items:center;gap:12px">
-      <a href="../index.html" class="back-btn">&#8592;</a>
-      <div style="flex:1">
-        <h1 class="header-title">Data</h1>
-        <p class="header-sub" id="total-count">0 total companies</p>
-      </div>
-      <a href="add.html" style="width:36px;height:36px;border-radius:10px;background:#38a169;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;flex-shrink:0">+</a>
+  <div class="app-header">
+    <img src="../assets/logo.png" alt="Logo" class="logo" />
+    <div>
+      <h1>All Companies</h1>
+      <div class="subtitle">Filter & Browse</div>
     </div>
+  </div>
+
+  <div class="container">
+
     <!-- Search -->
-    <div class="search-wrap">
+    <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="search-input" placeholder="Search companies..." oninput="renderList()" />
+      <input type="text" id="search-input" placeholder="Search name, phone, city..." oninput="applyFilters()" />
     </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+
+      <!-- Rating Filter -->
+      <div class="filter-section">
+        <div class="filter-label">Rating</div>
+        <div class="chips" id="rating-chips">
+          <div class="chip active" data-value="all" onclick="setChip('rating', this)">All</div>
+          <div class="chip" data-value="not_important" onclick="setChip('rating', this)">Not Important</div>
+          <div class="chip" data-value="3star" onclick="setChip('rating', this)">⭐⭐⭐</div>
+          <div class="chip" data-value="4star" onclick="setChip('rating', this)">⭐⭐⭐⭐</div>
+          <div class="chip" data-value="5star" onclick="setChip('rating', this)">⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+
+      <!-- State Filter -->
+      <div class="filter-section">
+        <div class="filter-label">State</div>
+        <select class="form-control" id="state-filter" onchange="applyFilters()" style="padding:8px 12px; font-size:0.85rem;"></select>
+      </div>
+
+      <!-- Product Filter -->
+      <div class="filter-section">
+        <div class="filter-label">Product</div>
+        <div class="chips" id="product-chips">
+          <div class="chip active" data-value="all" onclick="setChip('product', this)">All</div>
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-section">
+        <div class="filter-label">Status</div>
+        <div class="chips" id="status-chips">
+          <div class="chip active" data-value="all" onclick="setChip('status', this)">All</div>
+          <div class="chip" data-value="Untouch" onclick="setChip('status', this)">Untouch</div>
+          <div class="chip" data-value="Follow-up" onclick="setChip('status', this)">Follow-up</div>
+          <div class="chip" data-value="Mature" onclick="setChip('status', this)">Mature</div>
+          <div class="chip" data-value="Need to Visit" onclick="setChip('status', this)">Need to Visit</div>
+          <div class="chip" data-value="No Need to Follow" onclick="setChip('status', this)">No Need</div>
+        </div>
+      </div>
+
+      <!-- Segment Filter -->
+      <div class="filter-section">
+        <div class="filter-label">Segment</div>
+        <div class="chips" id="segment-chips">
+          <div class="chip active" data-value="all" onclick="setChip('segment', this)">All</div>
+          <div class="chip" data-value="new_arrival" onclick="setChip('segment', this)">New Arrival</div>
+          <div class="chip" data-value="follow_up" onclick="setChip('segment', this)">Follow Up</div>
+          <div class="chip" data-value="mature" onclick="setChip('segment', this)">Mature</div>
+          <div class="chip" data-value="not_important" onclick="setChip('segment', this)">Not Important</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Count -->
+    <div class="result-count" id="result-count"></div>
+
+    <!-- Company List -->
+    <div id="company-list"></div>
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="filter-bar">
-    <div class="filter-inner" id="filter-bar"></div>
-  </div>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
-  <!-- Company List -->
-  <div class="page-body" id="company-list"></div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/app.js"></script>
 
-</div>
+  <script>
+    // Active filter state
+    const activeFilters = {
+      search: '',
+      rating: 'all',
+      state: 'all',
+      product: 'all',
+      status: 'all',
+      segment: 'all'
+    };
 
-<!-- Status Dropdown Backdrop -->
-<div class="dropdown-backdrop hidden" id="dd-backdrop" onclick="closeDropdown()"></div>
-
-<!-- Firebase Web SDK (v9 compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-  function quickDelete(id, name) {
-    if (confirm('Delete "' + name + '"?')) {
-      deleteCompany(id);
-      buildFilters();
-      renderList();
-    }
-  }
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="../assets/app.js"></script>
-<script>
-  let activeFilter = 'All';
-  let openDropdownId = null;
-
-  function buildFilters() {
-    const db = loadData();
-    const counts = { All: db.companies.length };
-    ALL_STATUSES.forEach(s => { counts[s] = db.companies.filter(c => c.status === s).length; });
-
-    const bar = document.getElementById('filter-bar');
-    const tabs = ['All', ...ALL_STATUSES];
-    bar.innerHTML = tabs.map(t =>
-      `<button class="filter-chip ${t === activeFilter ? 'active' : ''}" onclick="setFilter('${t}')">${t} (${counts[t] || 0})</button>`
-    ).join('');
-  }
-
-  function setFilter(f) {
-    activeFilter = f;
-    buildFilters();
-    renderList();
-  }
-
-  function renderList() {
-    const db     = loadData();
-    const query  = (document.getElementById('search-input').value || '').toLowerCase().trim();
-
-    let list = [...db.companies];
-
-    if (activeFilter !== 'All') {
-      list = list.filter(c => c.status === activeFilter);
-    }
-    if (query) {
-      list = list.filter(c =>
-        c.name.toLowerCase().includes(query) ||
-        c.city.toLowerCase().includes(query) ||
-        (c.phone || '').includes(query) ||
-        c.nature.toLowerCase().includes(query)
-      );
+    function setChip(filterType, el) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      activeFilters[filterType] = el.dataset.value;
+      applyFilters();
     }
 
-    document.getElementById('total-count').textContent = `${db.companies.length} total companies`;
+    function applyFilters() {
+      activeFilters.search = document.getElementById('search-input').value.trim();
+      activeFilters.state = document.getElementById('state-filter').value;
 
-    const el = document.getElementById('company-list');
-
-    if (list.length === 0) {
-      el.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-icon">📭</span>
-          <p class="empty-title">${query ? 'No matching companies' : 'No companies in this segment'}</p>
-          <p class="empty-sub">${!query ? '<a href="add.html">Add your first company →</a>' : ''}</p>
-        </div>`;
-      return;
+      const filtered = filterCompanies(activeFilters);
+      renderList(filtered);
     }
 
-    el.innerHTML = list.map(company => {
-      const sc  = STATUS_CLASS[company.status] || '';
-      const dot = STATUS_DOT[company.status]   || '';
-      return `
-        <div class="company-card" onclick="goCompany('${company.id}')">
-          <div class="avatar">${initials(company.name)}</div>
-          <div class="company-info">
-            <p class="company-name">${company.name}</p>
-            <p class="company-meta">${company.city} &bull; ${company.nature}${company.phone ? ' &bull; ' + company.phone : ''}</p>
-          </div>
-          <div class="dropdown-wrap" onclick="event.stopPropagation()">
-            <button class="status-badge ${sc}" onclick="toggleDropdown('${company.id}')">
-              ${company.status} <span style="font-size:8px">▼</span>
-            </button>
-            <div class="dropdown-list hidden" id="dd-${company.id}">
-              ${ALL_STATUSES.map(s => `
-                <div class="dropdown-item ${s === company.status ? 'current' : ''}" onclick="changeStatusBtn('${company.id}','${s}')">
-                  <span class="dropdown-dot ${STATUS_DOT[s]}"></span>
-                  ${s}
-                  ${s === company.status ? '<span style="margin-left:auto;color:#22c55e">✓</span>' : ''}
-                </div>`).join('')}
-            </div>
-          </div>
-          <button onclick="event.stopPropagation();quickDelete('${company.id}',`${company.name.replace(/[`\\'"]/g, '')}`)" style="background:none;border:none;font-size:15px;cursor:pointer;padding:6px 8px;margin-left:2px;opacity:0.6" title="Delete">🗑️</button>
-        </div>`;
-    }).join('');
-  }
+    function renderList(list) {
+      const el = document.getElementById('company-list');
+      document.getElementById('result-count').textContent = `${list.length} compan${list.length === 1 ? 'y' : 'ies'} found`;
 
-  function goCompany(id) {
-    window.location.href = 'company.html?id=' + id;
-  }
+      if (list.length === 0) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No companies match your filters</p>
+          </div>`;
+        return;
+      }
 
-  function toggleDropdown(id) {
-    if (openDropdownId && openDropdownId !== id) closeDropdown();
-    const dd = document.getElementById('dd-' + id);
-    if (!dd) return;
-    const isOpen = !dd.classList.contains('hidden');
-    if (isOpen) {
-      closeDropdown();
-    } else {
-      dd.classList.remove('hidden');
-      document.getElementById('dd-backdrop').classList.remove('hidden');
-      openDropdownId = id;
+      // Sort by updatedAt desc
+      list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+      el.innerHTML = list.map(c => buildCompanyCard(c, { basePath: '' })).join('');
     }
-  }
 
-  function closeDropdown() {
-    if (openDropdownId) {
-      const dd = document.getElementById('dd-' + openDropdownId);
-      if (dd) dd.classList.add('hidden');
-      openDropdownId = null;
+    function buildProductChips() {
+      const wrap = document.getElementById('product-chips');
+      const existing = wrap.innerHTML;
+      PRODUCT_OPTIONS.forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.dataset.value = p.value;
+        chip.textContent = p.label;
+        chip.onclick = function() { setChip('product', this); };
+        wrap.appendChild(chip);
+      });
     }
-    document.getElementById('dd-backdrop').classList.add('hidden');
-  }
 
-  function changeStatusBtn(id, status) {
-    changeStatus(id, status);
-    closeDropdown();
-    buildFilters();
-    renderList();
-  }
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBottomNav('data');
+      populateStateFilter(document.getElementById('state-filter'), 'all');
+      buildProductChips();
 
-  buildFilters();
-  renderList();
-</script>
+      // Check URL params for preset filters
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('segment')) {
+        activeFilters.segment = params.get('segment');
+        // Activate the right chip
+        document.querySelectorAll('#segment-chips .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.value === activeFilters.segment);
+        });
+      }
+
+      onDataChange(() => applyFilters());
+      setTimeout(() => applyFilters(), 500);
+    });
+  </script>
 </body>
 </html>

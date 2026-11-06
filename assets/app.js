@@ -1,517 +1,437 @@
-// ============================================================
-//  Dwarkesh Polyfab CRM – app.js  (v3 – Firebase Cloud Sync)
-//  Data syncs across ALL devices via Firebase.
-//  Works offline too – uses localStorage as cache.
-// ============================================================
+/* ===== Dwarkesh Polyfab CRM v2 — app.js ===== */
 
-const STORAGE_KEY = 'dwarkesh_crm_data';
-
-// ════════════════════════════════════════════════════════════
-//  🔥 FIREBASE CONFIG
-//  STEP: Replace the values below with YOUR Firebase config
-//  Get it from: Firebase Console → Project Settings → Your Apps
-// ════════════════════════════════════════════════════════════
+// ── Firebase Config ──
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyCvUABuMqhfs1SpZMdWKQve0418KdmVg38",
-  authDomain:        "dwarkesh-crm.firebaseapp.com",
-  databaseURL:       "https://dwarkesh-crm-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:         "dwarkesh-crm",
-  storageBucket:     "dwarkesh-crm.firebasestorage.app",
+  apiKey: "AIzaSyCvUABuMqhfs1SpZMdWKQve0418KdmVg38",
+  authDomain: "dwarkesh-crm.firebaseapp.com",
+  databaseURL: "https://dwarkesh-crm-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dwarkesh-crm",
+  storageBucket: "dwarkesh-crm.firebasestorage.app",
   messagingSenderId: "513099827589",
-  appId:             "1:513099827589:web:ebb115e569abb2b53c1cec",
-  measurementId:     "G-0MJE1KLNQP"
+  appId: "1:513099827589:web:ebb115e569abb2b53c1cec",
+  measurementId: "G-0MJE1KLNQP"
 };
 
-let _fireDB     = null;  // Firebase database reference
-let _fireReady  = false; // Is Firebase connected?
-let _syncTimer  = null;  // Debounce timer for saves
-
-// ── Initialize Firebase & start listening ──
-function initFirebase() {
-  try {
-    if (typeof firebase === 'undefined') return; // SDK not loaded
-    if (FIREBASE_CONFIG.apiKey.includes('PASTE_YOUR')) return; // Not configured yet
-
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    _fireDB    = firebase.database();
-    _fireReady = true;
-
-    // 🔴 LIVE LISTENER – updates this device when another device saves data
-    _fireDB.ref('crm_data').on('value', snapshot => {
-      const data = snapshot.val();
-      if (!data) return;
-
-      // Convert Firebase objects back to arrays
-      const synced = {
-        companies:  data.companies  ? Object.values(data.companies)  : [],
-        reminders:  data.reminders  ? Object.values(data.reminders)  : [],
-        activities: data.activities ? Object.values(data.activities) : [],
-      };
-
-      // Save to localStorage cache
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(synced));
-
-      // Refresh current page UI automatically
-      if (typeof buildFilters  === 'function') buildFilters();
-      if (typeof renderList    === 'function') renderList();
-      if (typeof loadCompany   === 'function') loadCompany();
-      if (typeof renderPage    === 'function') renderPage();
-
-      // Show sync indicator
-      showSyncBadge('✅ Synced');
-    });
-
-    // Monitor connection state
-    firebase.database().ref('.info/connected').on('value', snap => {
-      if (snap.val() === true) showSyncBadge('☁️ Online');
-      else                     showSyncBadge('📴 Offline');
-    });
-
-    console.log('🔥 Firebase connected!');
-  } catch (e) {
-    console.error('Firebase error:', e);
-  }
+// ── Init Firebase ──
+if (!firebase.apps.length) {
+  firebase.initializeApp(FIREBASE_CONFIG);
 }
+const _fireDB = firebase.database();
 
-// ── Show small sync indicator in top-right ──
-function showSyncBadge(text) {
-  let badge = document.getElementById('_sync_badge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.id = '_sync_badge';
-    badge.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.6);color:#fff;pointer-events:none;transition:opacity .3s';
-    document.body.appendChild(badge);
-  }
-  badge.textContent = text;
-  badge.style.opacity = '1';
-  clearTimeout(badge._hideTimer);
-  badge._hideTimer = setTimeout(() => { badge.style.opacity = '0'; }, 2500);
-}
-
-// ── Save to Firebase (debounced – waits 500ms before sending) ──
-function saveToFirebase(data) {
-  if (!_fireReady || !_fireDB) return;
-  clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(() => {
-    try {
-      const fbData = { companies: {}, reminders: {}, activities: {} };
-      data.companies.forEach(c  => fbData.companies[c.id]   = c);
-      data.reminders.forEach(r  => fbData.reminders[r.id]   = r);
-      data.activities.forEach(a => fbData.activities[a.id]  = a);
-      _fireDB.ref('crm_data').set(fbData);
-    } catch (e) { console.error('Firebase save error:', e); }
-  }, 500);
-}
-
-// ── Default empty data ──
-function defaultData() {
-  return { companies: [], reminders: [], activities: [] };
-}
-
-// ── Load from localStorage (instant) ──
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultData();
-    return JSON.parse(raw);
-  } catch (e) { return defaultData(); }
-}
-
-// ── Save: localStorage immediately + Firebase in background ──
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); // instant local save
-  saveToFirebase(data);                                      // background cloud save
-}
-
-function genId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-
-function tomorrowStr() {
-  const d = new Date(); d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
-}
-
-function fmtDate(dateStr) {
-  if (!dateStr) return '—';
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-}
-
-function fmtRelDate(dateStr) {
-  if (!dateStr) return '—';
-  const t = todayStr(), tom = tomorrowStr();
-  const yest = (() => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; })();
-  if (dateStr === t)    return 'Today';
-  if (dateStr === tom)  return 'Tomorrow';
-  if (dateStr === yest) return 'Yesterday';
-  return fmtDate(dateStr);
-}
-
-function fmtTime(timeStr) {
-  if (!timeStr) return '';
-  const [h, m] = timeStr.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${ampm}`;
-}
-
-function initials(name) {
-  if (!name) return '??';
-  return name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
-}
-
-// ── Constants ──
-const STATUS_CLASS = {
-  'Untouch':           'status-Untouch',
-  'Follow-up':         'status-Follow-up',
-  'Need to Visit':     'status-Need-to-Visit',
-  'No Need to Follow': 'status-No-Need-to-Follow',
-  'Mature':            'status-Mature',
-};
-const STATUS_DOT = {
-  'Untouch':           'dot-untouch',
-  'Follow-up':         'dot-followup',
-  'Need to Visit':     'dot-visit',
-  'No Need to Follow': 'dot-noneed',
-  'Mature':            'dot-mature',
-};
-const ALL_STATUSES = ['Untouch','Follow-up','Need to Visit','No Need to Follow','Mature'];
-const ALL_NATURES  = ['Manufacturer','Trader','Exporter'];
-const ACTIVITY_ICON = { 'Called':'📞', 'Message':'💬', 'Not Touch':'❌' };
-
-// ── Bag Spec Options ──
-const BAG_LAMINATION_OPTIONS = ['Unlaminated','Milkey','Natural','BOPP'];
-const BAG_PRINT_OPTIONS      = ['No','One Side','Two Side'];
-const BAG_FABRIC_OPTIONS     = ['Gold','Silver','Janta','Blue Patta','Mix Tap','Antislip','Leno Bag','Other'];
-const BAG_LINER_OPTIONS      = ['No','Milkey','Natural','Semi Natural'];
-const BAG_LINER_STICH_OPTIONS= ['Instich','Without Stich'];
-
-// ── Cities list ──
-const CITIES = [
-  'Morbi','Rajkot','Ahmedabad','Surat','Vadodara','Gandhinagar','Bhavnagar',
-  'Jamnagar','Junagadh','Gondal','Porbandar','Surendranagar','Anand','Mehsana',
-  'Bharuch','Vapi','Navsari','Kutch','Bhuj','Gandhidham','Amreli','Dhoraji',
-  'Jetpur','Wankaner','Halvad','Mumbai','Pune','Delhi','Kolkata','Chennai',
-  'Hyderabad','Bangalore','Jaipur','Udaipur','Jodhpur','Indore','Bhopal',
-  'Nagpur','Nashik','Aurangabad','Other'
+// ── All Indian States ──
+const INDIAN_STATES = [
+  "Gujarat","Maharashtra","Rajasthan","Madhya Pradesh","Uttar Pradesh",
+  "Karnataka","Tamil Nadu","Andhra Pradesh","Telangana","Kerala",
+  "West Bengal","Bihar","Odisha","Punjab","Haryana","Chhattisgarh",
+  "Jharkhand","Uttarakhand","Himachal Pradesh","Assam","Goa","Tripura",
+  "Meghalaya","Manipur","Mizoram","Nagaland","Arunachal Pradesh","Sikkim",
+  "Jammu and Kashmir","Ladakh","Delhi","Chandigarh","Puducherry",
+  "Dadra and Nagar Haveli and Daman and Diu","Lakshadweep",
+  "Andaman and Nicobar Islands"
 ];
 
-// ── Get all unique cities from saved companies ──
-function getUniqueCities() {
-  const db = loadData();
-  const cities = [...new Set(db.companies.map(c => c.city).filter(Boolean))].sort();
-  return cities;
+// ── Product Options ──
+const PRODUCT_OPTIONS = [
+  { value: "pp_bag",           label: "PP Bag" },
+  { value: "bopp_bag",         label: "BOPP Bag" },
+  { value: "antislip_bag",     label: "Anti-Slip Bag" },
+  { value: "leno_bag",         label: "Leno Bag" },
+  { value: "fibc_bag",         label: "FIBC Bag" },
+  { value: "multicolour_bag",  label: "Multicolour Bag" },
+  { value: "valve_bag",        label: "Valve Bag" },
+  { value: "sugar_bag",        label: "Sugar Bag" },
+  { value: "ld_liner_bag",     label: "L D Liner Bag" },
+  { value: "rice_bag",         label: "Rice Bag" },
+  { value: "other",            label: "Other" }
+];
+
+// ── Rating Options ──
+const RATING_OPTIONS = [
+  { value: "not_important", label: "Not Important", stars: "" },
+  { value: "3star",         label: "⭐⭐⭐",       stars: "⭐⭐⭐" },
+  { value: "4star",         label: "⭐⭐⭐⭐",     stars: "⭐⭐⭐⭐" },
+  { value: "5star",         label: "⭐⭐⭐⭐⭐",   stars: "⭐⭐⭐⭐⭐" }
+];
+
+// ── Status Options ──
+const STATUS_OPTIONS = [
+  "Untouch","Follow-up","Mature","Need to Visit","No Need to Follow"
+];
+
+// ── Segment Options ──
+const SEGMENT_OPTIONS = [
+  { value: "new_arrival",   label: "New Arrival" },
+  { value: "follow_up",     label: "Follow Up" },
+  { value: "mature",        label: "Mature" },
+  { value: "not_important", label: "Not Important" }
+];
+
+// ── Helpers ──
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
 }
 
-// ── Company CRUD ──
-function addCompany(data) {
-  const db = loadData();
-  const now = new Date().toISOString();
-  const company = {
-    id: genId(), ...data,
-    // Bag specs (default empty if not provided)
-    bagSize:       data.bagSize       || '',
-    bagWeight:     data.bagWeight     || '',
-    print:         data.print         || '',
-    lamination:    data.lamination    || '',
-    liner:         data.liner         || '',
-    fabricQuality: data.fabricQuality || '',
-    gsm:           data.gsm           || '',
-    companyNotes:  data.companyNotes  || '',
-    createdAt: now, updatedAt: now
-  };
-  db.companies.unshift(company);
-  saveData(db);
-  return company;
+function cleanPhone(phone) {
+  if (!phone) return '';
+  let p = phone.replace(/[^0-9+]/g, '');
+  if (p.startsWith('+')) return p.substring(1);
+  if (p.startsWith('91') && p.length > 10) return p;
+  if (p.length === 10) return '91' + p;
+  return p;
 }
 
-function getCompany(id) {
-  return loadData().companies.find(c => c.id === id);
+function getProductLabel(val) {
+  const p = PRODUCT_OPTIONS.find(o => o.value === val);
+  return p ? p.label : val;
 }
 
-function updateCompany(id, updates) {
-  const db = loadData();
-  db.companies = db.companies.map(c =>
-    c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
-  );
-  saveData(db);
+function getRatingStars(rating) {
+  switch (rating) {
+    case '3star': return '⭐⭐⭐';
+    case '4star': return '⭐⭐⭐⭐';
+    case '5star': return '⭐⭐⭐⭐⭐';
+    default: return '—';
+  }
+}
+
+function getStatusClass(status) {
+  if (!status) return 'status-untouch';
+  const s = status.toLowerCase().replace(/\s+/g, '-');
+  if (s.includes('untouch')) return 'status-untouch';
+  if (s.includes('follow')) return 'status-follow-up';
+  if (s.includes('mature')) return 'status-mature';
+  if (s.includes('need-to-visit')) return 'status-need-to-visit';
+  if (s.includes('no-need')) return 'status-no-need';
+  return 'status-untouch';
+}
+
+// ── WhatsApp & Call ──
+function openWhatsApp(phone) {
+  const clean = cleanPhone(phone);
+  if (!clean) { showToast('No phone number'); return; }
+  window.open('https://wa.me/' + clean, '_blank');
+}
+
+function callPhone(phone) {
+  const clean = cleanPhone(phone);
+  if (!clean) { showToast('No phone number'); return; }
+  window.location.href = 'tel:+' + clean;
+}
+
+// ── Toast ──
+function showToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'app-toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── In-memory data ──
+let _companiesCache = {};
+let _remindersCache = {};
+let _dataListeners = [];
+
+// ── Firebase Live Listener ──
+function initLiveListener() {
+  _fireDB.ref('crm_data/companies').on('value', snap => {
+    _companiesCache = snap.val() || {};
+    _dataListeners.forEach(fn => { try { fn(_companiesCache); } catch(e) { console.error(e); } });
+  });
+  _fireDB.ref('crm_data/reminders').on('value', snap => {
+    _remindersCache = snap.val() || {};
+    _dataListeners.forEach(fn => { try { fn(_companiesCache); } catch(e) { console.error(e); } });
+  });
+}
+
+function onDataChange(fn) {
+  _dataListeners.push(fn);
+}
+
+// ── CRUD: Companies ──
+function saveCompany(company) {
+  if (!company.id) company.id = genId();
+  company.updatedAt = new Date().toISOString();
+  if (!company.createdAt) company.createdAt = company.updatedAt;
+  if (!company.source) company.source = 'manual';
+  if (!company.segment) company.segment = 'new_arrival';
+  if (!company.status) company.status = 'Untouch';
+  if (!company.rating) company.rating = 'not_set';
+  return _fireDB.ref('crm_data/companies/' + company.id).set(company);
 }
 
 function deleteCompany(id) {
-  const db = loadData();
-  db.companies  = db.companies.filter(c => c.id !== id);
-  db.reminders  = db.reminders.filter(r => r.companyId !== id);
-  db.activities = db.activities.filter(a => a.companyId !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  
-  // Instant direct delete in Firebase
-  if (_fireReady && _fireDB) {
-    _fireDB.ref('crm_data/companies/' + id).remove();
-  }
+  return _fireDB.ref('crm_data/companies/' + id).remove();
 }
 
-function changeStatus(id, status) { updateCompany(id, { status }); }
-
-// ── Reminders ──
-function addReminder(companyId, date, time) {
-  const db = loadData();
-  const reminder = { id: genId(), companyId, date, time, status: 'Pending', createdAt: new Date().toISOString() };
-  db.reminders.unshift(reminder);
-  saveData(db);
-  return reminder;
+function getCompany(id) {
+  return _companiesCache[id] || null;
 }
 
-function markReminderDone(id) {
-  const db = loadData();
-  db.reminders = db.reminders.map(r => r.id === id ? { ...r, status: 'Done' } : r);
-  saveData(db);
+function getAllCompanies() {
+  return Object.values(_companiesCache);
+}
+
+// ── CRUD: Reminders ──
+function saveReminder(reminder) {
+  if (!reminder.id) reminder.id = genId();
+  reminder.updatedAt = new Date().toISOString();
+  if (!reminder.createdAt) reminder.createdAt = reminder.updatedAt;
+  if (!reminder.completed) reminder.completed = false;
+  return _fireDB.ref('crm_data/reminders/' + reminder.id).set(reminder);
+}
+
+function deleteReminder(id) {
+  return _fireDB.ref('crm_data/reminders/' + id).remove();
+}
+
+function completeReminder(id) {
+  return _fireDB.ref('crm_data/reminders/' + id).update({ completed: true, completedAt: new Date().toISOString() });
+}
+
+function getAllReminders() {
+  return Object.values(_remindersCache);
+}
+
+function getRemindersForCompany(companyId) {
+  return getAllReminders().filter(r => r.companyId === companyId);
+}
+
+// ── Reminder Filters ──
+function getTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
 function getTodayReminders() {
-  const t = todayStr();
-  return loadData().reminders.filter(r => r.date === t && r.status === 'Pending').sort((a,b) => a.time.localeCompare(b.time));
+  const today = getTodayStr();
+  return getAllReminders().filter(r => !r.completed && r.date === today);
 }
 
 function getMissedReminders() {
-  const t = todayStr();
-  return loadData().reminders.filter(r => r.date < t && r.status === 'Pending').sort((a,b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
+  const today = getTodayStr();
+  return getAllReminders().filter(r => !r.completed && r.date < today);
 }
 
-function getTomorrowReminders() {
-  const tom = tomorrowStr();
-  return loadData().reminders.filter(r => r.date === tom && r.status === 'Pending').sort((a,b) => a.time.localeCompare(b.time));
+function getUpcomingReminders() {
+  const today = getTodayStr();
+  return getAllReminders().filter(r => !r.completed && r.date > today);
 }
 
-function getCounts() {
-  return { today: getTodayReminders().length, missed: getMissedReminders().length, tomorrow: getTomorrowReminders().length };
+// ── Segment Counts ──
+function getNewArrivalsCount() {
+  return getAllCompanies().filter(c => c.segment === 'new_arrival').length;
 }
 
-// ── Activities ──
-function addActivity({ companyId, reminderId, type, notes, nextFollowUpDate, nextFollowUpTime }) {
-  const db = loadData();
-  const activity = {
-    id: genId(), companyId, reminderId, type, notes,
-    nextFollowUpDate: nextFollowUpDate || '',
-    nextFollowUpTime: nextFollowUpTime || '',
-    createdAt: new Date().toISOString()
-  };
-  db.activities.unshift(activity);
-  db.reminders = db.reminders.map(r => r.id === reminderId ? { ...r, status: 'Done' } : r);
+// ── Filter Companies (cross-filter, AND logic) ──
+function filterCompanies(filters) {
+  let list = getAllCompanies();
 
-  if (nextFollowUpDate) {
-    db.reminders.unshift({ id: genId(), companyId, date: nextFollowUpDate, time: nextFollowUpTime || '10:00', status: 'Pending', createdAt: new Date().toISOString() });
-    db.companies = db.companies.map(c =>
-      c.id === companyId && c.status === 'Untouch'
-        ? { ...c, status: 'Follow-up', updatedAt: new Date().toISOString() } : c
+  if (filters.search) {
+    const s = filters.search.toLowerCase();
+    list = list.filter(c =>
+      (c.name && c.name.toLowerCase().includes(s)) ||
+      (c.phone && c.phone.includes(s)) ||
+      (c.city && c.city.toLowerCase().includes(s))
     );
   }
-  saveData(db);
+  if (filters.rating && filters.rating !== 'all') {
+    list = list.filter(c => c.rating === filters.rating);
+  }
+  if (filters.state && filters.state !== 'all') {
+    list = list.filter(c => c.state === filters.state);
+  }
+  if (filters.product && filters.product !== 'all') {
+    list = list.filter(c => c.products && c.products.includes(filters.product));
+  }
+  if (filters.status && filters.status !== 'all') {
+    list = list.filter(c => c.status === filters.status);
+  }
+  if (filters.segment && filters.segment !== 'all') {
+    list = list.filter(c => c.segment === filters.segment);
+  }
+
+  return list;
 }
 
-function getCompanyActivities(companyId) {
-  return loadData().activities.filter(a => a.companyId === companyId).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-// ── 📊 EXPORT TO EXCEL/CSV ──
-function exportToCSV() {
-  const db = loadData();
-  if (db.companies.length === 0) { alert('No companies to export!'); return; }
-
-  const headers = [
-    'Company Name','City','Nature','Phone','Status',
-    'Bag Size','Bag Weight (g)','Print','Lamination','Liner','Fabric Quality','GSM',
-    'Notes','Created Date'
-  ];
-
-  const rows = db.companies.map(c => [
-    c.name         || '',
-    c.city         || '',
-    c.nature       || '',
-    c.phone        || '',
-    c.status       || '',
-    c.bagSize      || '',
-    c.bagWeight    || '',
-    c.print        || '',
-    c.lamination   || '',
-    c.liner        || '',
-    c.fabricQuality|| '',
-    c.gsm          || '',
-    (c.companyNotes|| '').replace(/,/g, ';'),
-    c.createdAt ? c.createdAt.split('T')[0] : ''
-  ].map(v => `"${v}"`));
-
-  const csv = [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `dwarkesh-crm-companies-${todayStr()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ── 💾 Backup JSON ──
-function exportData() {
-  const data = loadData();
+// ── Export / Import Backup ──
+function exportBackup() {
+  const data = {
+    companies: _companiesCache,
+    reminders: _remindersCache,
+    exportedAt: new Date().toISOString()
+  };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
   a.href = url;
-  a.download = `dwarkesh-crm-backup-${todayStr()}.json`;
+  a.download = 'dwarkesh-crm-backup-' + getTodayStr() + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
 }
 
-// ── 📂 Restore from JSON ──
-function importData(file) {
+function importBackup(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (!data.companies || !data.reminders || !data.activities) { reject('Invalid backup file'); return; }
-        saveData(data);
-        resolve(data);
-      } catch { reject('Could not read file'); }
+        if (data.companies) {
+          await _fireDB.ref('crm_data/companies').set(data.companies);
+        }
+        if (data.reminders) {
+          await _fireDB.ref('crm_data/reminders').set(data.reminders);
+        }
+        showToast('Backup imported successfully');
+        resolve();
+      } catch (err) {
+        showToast('Import failed: ' + err.message);
+        reject(err);
+      }
     };
     reader.readAsText(file);
   });
 }
 
-// ── 📞 Direct Call ──
-function callPhone(phone) {
-  if (!phone) { alert('No phone number saved for this company.'); return; }
-  window.location.href = 'tel:' + phone.replace(/\s/g, '');
-}
-
-// ── 💬 WhatsApp ──
-function openWhatsApp(phone, name) {
-  if (!phone) { alert('No phone number saved for this company.'); return; }
-  let clean = phone.replace(/\D/g, '');
-  if (clean.length === 10) clean = '91' + clean;
-  window.open(`https://wa.me/${clean}`, '_blank');
-}
-
-// ── DOM helpers ──
-function qs(sel, ctx = document)  { return ctx.querySelector(sel); }
-function qsa(sel, ctx = document) { return [...ctx.querySelectorAll(sel)]; }
-function show(el) { if (el) el.classList.remove('hidden'); }
-function hide(el) { if (el) el.classList.add('hidden'); }
-function goTo(page) { window.location.href = page; }
-
-// ============================================================
-//  🔔 NOTIFICATIONS – Phone popup alerts for reminders
-// ============================================================
-
-// ── Register Service Worker ──
-async function registerSW() {
-  if (!('serviceWorker' in navigator)) return null;
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    return reg;
-  } catch (e) {
-    // Try relative path (for GitHub Pages subfolders)
-    try {
-      const reg = await navigator.serviceWorker.register('./sw.js');
-      return reg;
-    } catch (e2) { return null; }
-  }
-}
-
-// ── Ask user permission for notifications ──
-async function requestNotificationPermission() {
-  if (!('Notification' in window)) return false;
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied')  return false;
-
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-// ── Schedule notifications for today's reminders ──
-async function scheduleReminderNotifications() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-
-  // Wait for service worker to be ready
-  let swReg = null;
+// ── Service Worker Registration ──
+function registerSW() {
   if ('serviceWorker' in navigator) {
-    try { swReg = await navigator.serviceWorker.ready; } catch(e) {}
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
-
-  const db     = loadData();
-  const today  = getTodayReminders();
-  const now    = new Date();
-
-  today.forEach(reminder => {
-    const company = db.companies.find(c => c.id === reminder.companyId);
-    if (!company) return;
-
-    const [h, m] = (reminder.time || '10:00').split(':').map(Number);
-    const fireAt  = new Date();
-    fireAt.setHours(h, m, 0, 0);
-
-    const delay = fireAt - now;
-
-    // Only schedule if it's in the next 24 hours (and hasn't passed)
-    if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return;
-
-    console.log(`📅 Notification scheduled for ${company.name} at ${reminder.time}`);
-
-    setTimeout(() => {
-      const title = `📞 Follow-up: ${company.name}`;
-      const body  = `Time to call ${company.name} · ${company.city} · ${company.nature}`;
-
-      if (swReg && navigator.serviceWorker.controller) {
-        // Send via service worker (works in background)
-        navigator.serviceWorker.controller.postMessage({
-          type:      'SHOW_NOTIFICATION',
-          title:     title,
-          body:      body,
-          reminderId: reminder.id,
-          companyId:  company.id,
-        });
-      } else {
-        // Direct notification (only when app is open)
-        try {
-          new Notification(title, {
-            body:             body,
-            icon:             '../assets/icon-192.png',
-            badge:            '../assets/icon-192.png',
-            vibrate:          [300, 100, 300],
-            tag:              reminder.id,
-            requireInteraction: true,
-          });
-        } catch(e) {}
-      }
-    }, delay);
-  });
 }
 
-// ── Setup notifications (call this on every page load) ──
-async function setupNotifications() {
-  await registerSW();
-
-  // Ask permission if not decided yet
+// ── Notification Permission ──
+function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
-    // Small delay so page loads first
-    setTimeout(async () => {
-      await requestNotificationPermission();
-      await scheduleReminderNotifications();
-    }, 2000);
-  } else {
-    await scheduleReminderNotifications();
+    Notification.requestPermission();
   }
 }
 
-// Auto-run when script loads
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initFirebase();
-    setupNotifications();
-  });
-} else {
-  initFirebase();
-  setupNotifications();
+// ── Build Helpers (for rendering) ──
+function buildProductTags(products) {
+  if (!products || !products.length) return '';
+  return products.map(p => `<span class="tag">${getProductLabel(p)}</span>`).join('');
 }
+
+function buildStatusBadge(status) {
+  if (!status) return '';
+  return `<span class="status-badge ${getStatusClass(status)}">${status}</span>`;
+}
+
+function buildCompanyCard(c, opts = {}) {
+  const showDelete = opts.showDelete !== false;
+  const linkTo = opts.linkTo !== false;
+  const basePath = opts.basePath || 'pages/';
+
+  let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${basePath}company.html?id=${c.id}'"` : ''}>`;
+  html += `<div class="cc-top">`;
+  html += `<div class="cc-name">${escHtml(c.name || 'Unnamed')}</div>`;
+  html += `<div class="cc-rating">${getRatingStars(c.rating)}</div>`;
+  html += `</div>`;
+  html += `<div class="cc-meta">`;
+  if (c.phone) html += `<span>📞 ${escHtml(c.phone)}</span>`;
+  if (c.city || c.state) html += `<span>📍 ${escHtml([c.city, c.state].filter(Boolean).join(', '))}</span>`;
+  html += `</div>`;
+  html += `<div class="cc-tags">${buildProductTags(c.products)} ${buildStatusBadge(c.status)}</div>`;
+  html += `<div class="action-row" onclick="event.stopPropagation()">`;
+  html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">📱 WhatsApp</button>`;
+  html += `<button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>`;
+  if (showDelete) {
+    html += `<button class="btn btn-red btn-sm" onclick="confirmDelete('${c.id}','${escAttr(c.name)}')">🗑️</button>`;
+  }
+  html += `</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  if (!s) return '';
+  return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// ── Delete Confirm ──
+let _deleteModal = null;
+function confirmDelete(id, name) {
+  if (!_deleteModal) {
+    _deleteModal = document.createElement('div');
+    _deleteModal.className = 'modal-overlay';
+    _deleteModal.id = 'delete-modal';
+    _deleteModal.innerHTML = `
+      <div class="modal-box">
+        <h3>Delete Company</h3>
+        <p id="delete-modal-msg">Are you sure?</p>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-red" id="delete-modal-confirm">Delete</button>
+        </div>
+      </div>`;
+    document.body.appendChild(_deleteModal);
+  }
+  document.getElementById('delete-modal-msg').textContent = `Delete "${name || 'this company'}"? This cannot be undone.`;
+  _deleteModal.classList.add('open');
+  document.getElementById('delete-modal-confirm').onclick = async () => {
+    await deleteCompany(id);
+    closeDeleteModal();
+    showToast('Company deleted');
+  };
+}
+
+function closeDeleteModal() {
+  if (_deleteModal) _deleteModal.classList.remove('open');
+}
+
+// ── Populate State Dropdown ──
+function populateStateDropdown(selectEl, selectedVal) {
+  let html = '<option value="">Select State</option>';
+  INDIAN_STATES.forEach(st => {
+    html += `<option value="${st}" ${selectedVal === st ? 'selected' : ''}>${st}</option>`;
+  });
+  selectEl.innerHTML = html;
+}
+
+// ── Populate State Filter Dropdown (with "All") ──
+function populateStateFilter(selectEl, selectedVal) {
+  let html = '<option value="all">All States</option>';
+  INDIAN_STATES.forEach(st => {
+    html += `<option value="${st}" ${selectedVal === st ? 'selected' : ''}>${st}</option>`;
+  });
+  selectEl.innerHTML = html;
+}
+
+// ── Build Bottom Nav ──
+function renderBottomNav(activePage) {
+  const isSubpage = window.location.pathname.includes('/pages/');
+  const prefix = isSubpage ? '../' : '';
+  const nav = document.getElementById('bottom-nav');
+  if (!nav) return;
+  nav.innerHTML = `
+    <a href="${prefix}index.html" class="${activePage==='home'?'active':''}">
+      <span class="nav-icon">🏠</span>Home
+    </a>
+    <a href="${prefix}pages/add.html" class="${activePage==='add'?'active':''}">
+      <span class="nav-icon">➕</span>Add
+    </a>
+    <a href="${prefix}pages/data.html" class="${activePage==='data'?'active':''}">
+      <span class="nav-icon">📊</span>Data
+    </a>
+    <a href="${prefix}pages/reminders.html" class="${activePage==='reminders'?'active':''}">
+      <span class="nav-icon">🔔</span>Reminders
+    </a>`;
+}
+
+// ── Init on DOM ready ──
+document.addEventListener('DOMContentLoaded', () => {
+  initLiveListener();
+  registerSW();
+  requestNotificationPermission();
+});

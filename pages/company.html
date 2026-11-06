@@ -2,448 +2,359 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#1a365d" />
-  <title>Company – Dwarkesh Polyfab CRM</title>
-  <link rel="manifest" href="../manifest.json" />
-  <link rel="apple-touch-icon" href="../assets/icon-192.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="DP CRM" />
-  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Company — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="icon" href="../assets/icon-192.png" type="image/png" />
-  <style>
-    .spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-    .spec-item{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px}
-    .spec-item.full{grid-column:1/-1}
-    .spec-label{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-    .spec-value{font-size:13px;font-weight:700;color:#111827;line-height:1.4}
-    .spec-empty{color:#d1d5db;font-style:italic;font-weight:400;font-size:12px}
-    .contact-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 16px 0}
-    .btn-call{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:14px;background:#2563eb;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:14px;background:#25d366;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .btn-call:active{background:#1d4ed8}.btn-wa:active{background:#128c7e}
-    .edit-top-btn{background:none;border:1px solid #d1d5db;border-radius:8px;font-size:11px;color:#6b7280;padding:4px 10px;cursor:pointer}
-    .liner-extra-view{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:8px;margin-top:4px;font-size:11px;color:#92400e}
-    .edit-chip{display:inline-block;padding:5px 10px;border-radius:20px;border:1.5px solid #d1d5db;background:#fff;font-size:11px;cursor:pointer;margin:3px;font-weight:600;color:#374151}
-    .edit-chip.sel{background:#1a365d;color:#fff;border-color:#1a365d}
-  </style>
+  <meta name="theme-color" content="#0f172a" />
 </head>
 <body>
-<div class="app">
 
   <!-- Header -->
-  <div class="company-detail-header" id="cd-header">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button class="back-btn" onclick="history.back()">&#8592;</button>
-      <h1 class="header-title" style="flex:1">Company Detail</h1>
-      <button onclick="confirmDelete()" style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:16px;border:none;cursor:pointer">🗑️</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px">
-      <div class="cd-avatar" id="cd-avatar">??</div>
-      <div class="cd-info">
-        <h2 class="cd-name" id="cd-name">—</h2>
-        <p class="cd-meta" id="cd-meta">—</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- CALL & WHATSAPP -->
-  <div class="contact-btns" id="contact-btns" style="display:none">
-    <button class="btn-call" id="btn-call"><span style="font-size:22px">📞</span> Call Now</button>
-    <button class="btn-wa"   id="btn-wa"  ><span style="font-size:22px">💬</span> WhatsApp</button>
-  </div>
-  <div id="no-phone-note" style="display:none;margin:10px 16px 0;font-size:11px;color:#ef4444;text-align:center">
-    ⚠️ No phone number — <a href="#" onclick="toggleEditSpecs();return false;" style="color:#2563eb;font-weight:700">Add phone number</a>
-  </div>
-
-  <!-- STATUS ROW -->
-  <div class="cd-status-row">
+  <div class="app-header">
+    <img src="../assets/logo.png" alt="Logo" class="logo" />
     <div>
-      <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Status</p>
-      <div class="dropdown-wrap">
-        <button class="status-badge" id="status-btn" onclick="toggleStatus()">— <span style="font-size:8px">▼</span></button>
-        <div class="dropdown-list hidden" id="status-dropdown"></div>
-        <div class="hidden" id="status-backdrop" onclick="closeStatus()" style="position:fixed;inset:0;z-index:20"></div>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="toggleAddReminder()">+ Add Reminder</button>
-  </div>
-
-  <!-- ADD REMINDER -->
-  <div class="hidden" id="add-reminder-box" style="margin:12px 16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px">
-    <p style="font-size:12px;font-weight:700;color:#1a365d;margin-bottom:10px">📅 Schedule Reminder</p>
-    <div class="grid-2">
-      <input type="date" class="input input-sm" id="new-reminder-date" />
-      <input type="time" class="input input-sm" id="new-reminder-time" value="10:00" />
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelReminder()">Cancel</button>
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveNewReminder()">Save</button>
+      <h1 id="page-title">Company Details</h1>
+      <div class="subtitle">Dwarkesh Polyfab CRM</div>
     </div>
   </div>
 
-  <div class="page-body" style="padding-top:14px">
-
-    <!-- ── BAG SPECIFICATIONS ── -->
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <p style="font-size:12px;font-weight:800;color:#1a365d">🛍️ Bag Specifications</p>
-        <button class="edit-top-btn" onclick="toggleEditSpecs()">✏️ Edit</button>
-      </div>
-
-      <!-- VIEW MODE -->
-      <div id="spec-view">
-        <div class="spec-grid">
-          <div class="spec-item"><div class="spec-label">Bag Size</div><div class="spec-value" id="sv-bagSize"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item"><div class="spec-label">Bag Weight</div><div class="spec-value" id="sv-bagWeight"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item"><div class="spec-label">GSM</div><div class="spec-value" id="sv-gsm"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item"><div class="spec-label">Lamination</div><div class="spec-value" id="sv-lamination"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item"><div class="spec-label">Printing</div><div class="spec-value" id="sv-print"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value" id="sv-fabric"><span class="spec-empty">—</span></div></div>
-          <div class="spec-item full" id="sv-liner-wrap">
-            <div class="spec-label">Liner</div>
-            <div class="spec-value" id="sv-liner"><span class="spec-empty">—</span></div>
-            <div id="sv-liner-extra" style="display:none">
-              <div class="liner-extra-view" id="sv-liner-details"></div>
-            </div>
-          </div>
-          <div class="spec-item full" id="sv-qty-wrap" style="display:none">
-            <div class="spec-label">Approx Quantity</div>
-            <div class="spec-value" id="sv-quantity"></div>
-          </div>
-        </div>
-        <div id="sv-notes-wrap" style="margin-top:10px;display:none">
-          <div class="spec-label" style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Extra Note</div>
-          <p style="font-size:13px;color:#374151;margin-top:4px;line-height:1.6" id="sv-notes"></p>
-        </div>
-      </div>
-
-      <!-- EDIT MODE -->
-      <div id="spec-edit" style="display:none;margin-top:12px">
-
-        <div class="field">
-          <label class="field-label">📞 Phone Number</label>
-          <input type="tel" class="input input-sm" id="edit-phone" placeholder="e.g. 9876543210" />
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label class="field-label">Bag Size</label>
-            <input type="text" class="input input-sm" id="edit-bagSize" placeholder="e.g. 24x36" />
-          </div>
-          <div class="field">
-            <label class="field-label">Bag Weight</label>
-            <input type="text" class="input input-sm" id="edit-bagWeight" placeholder="e.g. 60 gram" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">GSM</label>
-          <input type="text" class="input input-sm" id="edit-gsm" placeholder="e.g. 2.5" />
-        </div>
-
-        <div class="field">
-          <label class="field-label">Lamination</label>
-          <div id="edit-lamination-chips" class="chip-group"></div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Printing</label>
-          <div id="edit-print-chips" class="chip-group"></div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Fabric</label>
-          <div id="edit-fabric-chips" class="chip-group"></div>
-          <div id="edit-fabric-other-wrap" class="hidden" style="margin-top:8px">
-            <input type="text" class="input input-sm" id="edit-fabricOther" placeholder="Describe fabric..." />
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Liner</label>
-          <div id="edit-liner-chips" class="chip-group"></div>
-          <div id="edit-liner-extra" class="liner-extra hidden" style="margin-top:8px">
-            <div class="field" style="margin-top:0">
-              <label class="field-label">Stich Type</label>
-              <div id="edit-liner-stich-chips" class="chip-group"></div>
-            </div>
-            <div class="field">
-              <label class="field-label">Liner Weight (gram)</label>
-              <input type="text" class="input input-sm" id="edit-linerGram" placeholder="e.g. 20 gram" />
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Approx Quantity <span style="font-size:10px;color:#9ca3af">(optional)</span></label>
-          <input type="text" class="input input-sm" id="edit-quantity" placeholder="e.g. 5000 bags / month" />
-        </div>
-
-        <div class="field">
-          <label class="field-label">Extra Note</label>
-          <textarea class="textarea" id="edit-notes" style="min-height:60px" placeholder="Any extra details..."></textarea>
-        </div>
-
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelEditSpecs()">Cancel</button>
-          <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveSpecs()">✓ Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PENDING REMINDERS -->
-    <div id="pending-section" class="hidden">
-      <p class="section-label">📅 Upcoming Reminders</p>
-      <div id="pending-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-    </div>
-
-    <!-- ACTIVITY HISTORY -->
-    <p class="section-label">📝 Activity History</p>
-    <div id="activity-list"></div>
-
+  <div class="container">
+    <div id="company-view"></div>
+    <div id="company-edit" class="hidden"></div>
+    <div id="reminder-section"></div>
   </div>
-</div>
 
-<!-- Delete Confirm -->
-<div class="confirm-overlay hidden" id="delete-overlay">
-  <div class="confirm-box">
-    <span style="font-size:48px;display:block;margin-bottom:12px">⚠️</span>
-    <h3 style="font-size:15px;font-weight:800;margin-bottom:6px">Delete Company?</h3>
-    <p style="font-size:12px;color:#6b7280;margin-bottom:20px" id="delete-text">Cannot be undone.</p>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeDeleteConfirm()">Cancel</button>
-      <button class="btn btn-danger" style="flex:1" onclick="doDelete()">Delete</button>
-    </div>
-  </div>
-</div>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
-<!-- Firebase Web SDK (v9 compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="../assets/app.js"></script>
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const companyId = params.get('id');
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/app.js"></script>
 
-  // Edit state
-  let eSelLamination='', eSelPrint='', eSelFabric='', eSelLiner='', eSelLinerStich='';
+  <script>
+    let currentId = null;
+    let editMode = false;
 
-  // ── Set spec view cell ──
-  function setSpec(id, val) {
-    const el = document.getElementById(id);
-    if (val) { el.textContent = val; }
-    else      { el.innerHTML = '<span class="spec-empty">—</span>'; }
-  }
-
-  // ── Load & render company ──
-  function loadCompany() {
-    const c = getCompany(companyId);
-    if (!c) {
-      document.getElementById('cd-header').innerHTML =
-        '<div style="text-align:center;padding:40px"><p style="font-size:14px;font-weight:700;color:#4b5563">Company not found</p><a href="data.html" style="font-size:12px;color:#2563eb">← Back</a></div>';
-      return;
+    function getIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
     }
 
-    document.title = c.name + ' – DP CRM';
-    document.getElementById('cd-avatar').textContent = initials(c.name);
-    document.getElementById('cd-name').textContent   = c.name;
-    document.getElementById('cd-meta').textContent   = `📍 ${c.city}   🏭 ${c.nature}`;
-
-    // Call / WA
-    if (c.phone) {
-      document.getElementById('contact-btns').style.display='grid';
-      document.getElementById('btn-call').onclick = () => callPhone(c.phone);
-      document.getElementById('btn-wa').onclick   = () => openWhatsApp(c.phone, c.name);
-      document.getElementById('no-phone-note').style.display='none';
-    } else {
-      document.getElementById('contact-btns').style.display='none';
-      document.getElementById('no-phone-note').style.display='block';
-    }
-
-    // Status
-    const sb = document.getElementById('status-btn');
-    sb.className = 'status-badge ' + (STATUS_CLASS[c.status]||'');
-    sb.innerHTML = c.status + ' <span style="font-size:8px">▼</span>';
-    document.getElementById('status-dropdown').innerHTML = ALL_STATUSES.map(s => `
-      <div class="dropdown-item ${s===c.status?'current':''}" onclick="doChangeStatus('${s}')">
-        <span class="dropdown-dot ${STATUS_DOT[s]}"></span>${s}
-        ${s===c.status?'<span style="margin-left:auto;color:#22c55e">✓</span>':''}
-      </div>`).join('');
-    document.getElementById('new-reminder-date').value = todayStr();
-
-    // Bag spec view
-    setSpec('sv-bagSize',   c.bagSize);
-    setSpec('sv-bagWeight', c.bagWeight);
-    setSpec('sv-gsm',       c.gsm);
-    setSpec('sv-lamination',c.lamination);
-    setSpec('sv-print',     c.print);
-    setSpec('sv-fabric',    c.fabric || c.fabricQuality);
-
-    // Liner view with extra details
-    if (c.liner) {
-      setSpec('sv-liner', c.liner);
-      if (c.liner !== 'No' && (c.linerStich || c.linerGram)) {
-        const details = [
-          c.linerStich ? `Stich: ${c.linerStich}` : '',
-          c.linerGram  ? `Weight: ${c.linerGram}` : '',
-        ].filter(Boolean).join(' · ');
-        document.getElementById('sv-liner-details').textContent = details;
-        document.getElementById('sv-liner-extra').style.display = 'block';
-      } else {
-        document.getElementById('sv-liner-extra').style.display = 'none';
+    function renderView(c) {
+      if (!c) {
+        document.getElementById('company-view').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">❌</div>
+            <p>Company not found</p>
+          </div>`;
+        return;
       }
-    } else {
-      document.getElementById('sv-liner').innerHTML = '<span class="spec-empty">—</span>';
-      document.getElementById('sv-liner-extra').style.display = 'none';
+
+      document.getElementById('page-title').textContent = c.name || 'Company';
+
+      const products = (c.products || []).map(p => `<span class="tag">${getProductLabel(p)}</span>`).join(' ');
+      const otherProd = c.otherProduct ? `<span class="tag" style="background:var(--orange-bg);color:var(--orange);">${escHtml(c.otherProduct)}</span>` : '';
+
+      document.getElementById('company-view').innerHTML = `
+        <div class="detail-header">
+          <h2>${escHtml(c.name)}</h2>
+          <div class="detail-phone">${escHtml(c.phone)}</div>
+          <div style="margin-top:8px">${getRatingStars(c.rating)}</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="fab-actions">
+          <button class="btn btn-green" onclick="openWhatsApp('${escAttr(c.phone)}')">📱 WhatsApp</button>
+          <button class="btn btn-primary" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>
+        </div>
+
+        <!-- Details -->
+        <div class="detail-section">
+          <h3>Company Info</h3>
+          <div class="detail-row">
+            <span class="dr-label">State</span>
+            <span class="dr-value">${escHtml(c.state || '—')}</span>
+          </div>
+          <div class="detail-row">
+            <span class="dr-label">City</span>
+            <span class="dr-value">${escHtml(c.city || '—')}</span>
+          </div>
+          <div class="detail-row">
+            <span class="dr-label">Nature</span>
+            <span class="dr-value">${escHtml(c.nature || '—')}</span>
+          </div>
+          <div class="detail-row">
+            <span class="dr-label">Status</span>
+            <span class="dr-value">${buildStatusBadge(c.status)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="dr-label">Segment</span>
+            <span class="dr-value">${escHtml(c.segment || '—')}</span>
+          </div>
+          <div class="detail-row">
+            <span class="dr-label">Source</span>
+            <span class="dr-value">${escHtml(c.source || '—')}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Products</h3>
+          <div class="cc-tags">${products} ${otherProd}</div>
+        </div>
+
+        ${c.companyNotes ? `
+        <div class="detail-section">
+          <h3>Notes</h3>
+          <p style="color:var(--text-secondary);font-size:0.9rem;white-space:pre-wrap;">${escHtml(c.companyNotes)}</p>
+        </div>` : ''}
+
+        <!-- Edit / Delete -->
+        <div class="action-row" style="margin-top:16px;">
+          <button class="btn btn-primary" style="flex:1" onclick="toggleEdit()">✏️ Edit</button>
+          <button class="btn btn-red" style="flex:1" onclick="handleDelete()">🗑️ Delete</button>
+        </div>
+      `;
     }
 
-    // Quantity
-    if (c.quantity) {
-      document.getElementById('sv-qty-wrap').style.display='block';
-      document.getElementById('sv-quantity').textContent = c.quantity;
-    } else {
-      document.getElementById('sv-qty-wrap').style.display='none';
+    function toggleEdit() {
+      editMode = !editMode;
+      if (editMode) {
+        renderEditForm();
+        document.getElementById('company-view').classList.add('hidden');
+        document.getElementById('company-edit').classList.remove('hidden');
+      } else {
+        document.getElementById('company-view').classList.remove('hidden');
+        document.getElementById('company-edit').classList.add('hidden');
+      }
     }
 
-    // Notes
-    if (c.companyNotes) {
-      document.getElementById('sv-notes').textContent = c.companyNotes;
-      document.getElementById('sv-notes-wrap').style.display='block';
-    } else {
-      document.getElementById('sv-notes-wrap').style.display='none';
-    }
+    function renderEditForm() {
+      const c = getCompany(currentId);
+      if (!c) return;
 
-    // Pending reminders
-    const db = loadData();
-    const pending = db.reminders.filter(r=>r.companyId===companyId&&r.status==='Pending').sort((a,b)=>a.date.localeCompare(b.date));
-    if (pending.length>0) {
-      document.getElementById('pending-section').classList.remove('hidden');
-      document.getElementById('pending-list').innerHTML = pending.map(r=>`
-        <div class="reminder-pill"><span class="pill-date">📅 ${fmtDate(r.date)} at ${fmtTime(r.time)}</span><span class="pill-status">Pending</span></div>`).join('');
-    } else {
-      document.getElementById('pending-section').classList.add('hidden');
-    }
+      const ratingRadios = RATING_OPTIONS.map(r =>
+        `<label><input type="radio" name="e-rating" value="${r.value}" ${c.rating === r.value ? 'checked' : ''} /> ${r.label}</label>`
+      ).join('');
 
-    // Activity history
-    const acts = getCompanyActivities(companyId);
-    document.getElementById('activity-list').innerHTML = acts.length===0
-      ? `<div class="card" style="text-align:center;padding:32px 20px"><span style="font-size:40px;display:block;margin-bottom:10px">📭</span><p style="font-size:12px;font-weight:700;color:#6b7280">No activity yet</p></div>`
-      : acts.map(a=>`
-          <div class="activity-card fade-in" style="margin-bottom:10px">
-            <div class="activity-head">
-              <div class="activity-type"><span>${ACTIVITY_ICON[a.type]||'📌'}</span><span>${a.type}</span></div>
-              <span class="activity-date">${fmtDate(a.createdAt.split('T')[0])}</span>
+      const productChecks = PRODUCT_OPTIONS.map(p =>
+        `<label><input type="checkbox" name="e-products" value="${p.value}" ${(c.products||[]).includes(p.value) ? 'checked' : ''} /> ${p.label}</label>`
+      ).join('');
+
+      const statusOpts = STATUS_OPTIONS.map(s =>
+        `<option value="${s}" ${c.status === s ? 'selected' : ''}>${s}</option>`
+      ).join('');
+
+      const segmentOpts = SEGMENT_OPTIONS.map(s =>
+        `<option value="${s.value}" ${c.segment === s.value ? 'selected' : ''}>${s.label}</option>`
+      ).join('');
+
+      const natureOpts = ['','Manufacturer','Trader','Exporter'].map(n =>
+        `<option value="${n}" ${c.nature === n ? 'selected' : ''}>${n || 'Select Nature'}</option>`
+      ).join('');
+
+      document.getElementById('company-edit').innerHTML = `
+        <form onsubmit="return handleSaveEdit(event)">
+          <div class="form-group">
+            <label>Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="e-name" value="${escHtml(c.name)}" required />
+          </div>
+          <div class="form-group">
+            <label>Phone <span class="required">*</span></label>
+            <input type="tel" class="form-control" id="e-phone" value="${escHtml(c.phone)}" required />
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <select class="form-control" id="e-state"></select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" class="form-control" id="e-city" value="${escHtml(c.city || '')}" />
+          </div>
+          <div class="form-group">
+            <label>Nature</label>
+            <select class="form-control" id="e-nature">${natureOpts}</select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" id="e-status">${statusOpts}</select>
+          </div>
+          <div class="form-group">
+            <label>Segment</label>
+            <select class="form-control" id="e-segment">${segmentOpts}</select>
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <div class="radio-group">${ratingRadios}</div>
+          </div>
+          <div class="form-group">
+            <label>Products</label>
+            <div class="checkbox-group">${productChecks}</div>
+            <div style="margin-top:10px;">
+              <input type="text" class="form-control" id="e-other-product" value="${escHtml(c.otherProduct || '')}" placeholder="Other product (if selected)" />
             </div>
-            <p class="activity-notes">${a.notes}</p>
-            ${a.nextFollowUpDate?`<p class="activity-next">📅 Next: ${fmtDate(a.nextFollowUpDate)} at ${fmtTime(a.nextFollowUpTime)}</p>`:''}
-          </div>`).join('');
-  }
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea class="form-control" id="e-notes">${escHtml(c.companyNotes || '')}</textarea>
+          </div>
+          <div class="action-row">
+            <button type="submit" class="btn btn-green" style="flex:1">💾 Save</button>
+            <button type="button" class="btn btn-outline" style="flex:1" onclick="toggleEdit()">Cancel</button>
+          </div>
+        </form>
+      `;
 
-  // ── Edit spec chips builder ──
-  function buildEditChips() {
-    const mkChip = (val, sel, field) =>
-      `<button class="chip ${val===sel?'selected':''}" style="font-size:11px" onclick="ePick('${field}','${val}')">${val}</button>`;
-
-    document.getElementById('edit-lamination-chips').innerHTML = BAG_LAMINATION_OPTIONS.map(l=>mkChip(l,eSelLamination,'lamination')).join('');
-    document.getElementById('edit-print-chips').innerHTML      = BAG_PRINT_OPTIONS.map(p=>mkChip(p,eSelPrint,'print')).join('');
-    document.getElementById('edit-fabric-chips').innerHTML     = BAG_FABRIC_OPTIONS.map(f=>mkChip(f,eSelFabric,'fabric')).join('');
-    document.getElementById('edit-liner-chips').innerHTML      = BAG_LINER_OPTIONS.map(l=>mkChip(l,eSelLiner,'liner')).join('');
-
-    // Fabric Other
-    document.getElementById('edit-fabric-other-wrap').classList.toggle('hidden', eSelFabric!=='Other');
-
-    // Liner extra
-    const linerExtra = document.getElementById('edit-liner-extra');
-    if (eSelLiner && eSelLiner!=='No') {
-      linerExtra.classList.remove('hidden');
-      document.getElementById('edit-liner-stich-chips').innerHTML = BAG_LINER_STICH_OPTIONS.map(s=>mkChip(s,eSelLinerStich,'linerStich')).join('');
-    } else {
-      linerExtra.classList.add('hidden');
+      populateStateDropdown(document.getElementById('e-state'), c.state || '');
     }
-  }
 
-  function ePick(field, val) {
-    if (field==='lamination') eSelLamination = eSelLamination===val?'':val;
-    if (field==='print')      eSelPrint      = eSelPrint===val?'':val;
-    if (field==='fabric')     { eSelFabric   = eSelFabric===val?'':val; }
-    if (field==='liner')      { eSelLiner    = eSelLiner===val?'':val; if(eSelLiner==='No') eSelLinerStich=''; }
-    if (field==='linerStich') eSelLinerStich = eSelLinerStich===val?'':val;
-    buildEditChips();
-  }
+    function handleSaveEdit(e) {
+      e.preventDefault();
+      const c = getCompany(currentId);
+      if (!c) return false;
 
-  function toggleEditSpecs() {
-    const c = getCompany(companyId); if (!c) return;
-    eSelLamination  = c.lamination  || '';
-    eSelPrint       = c.print       || '';
-    eSelFabric      = (c.fabric||c.fabricQuality||'').startsWith('Other:') ? 'Other' : (c.fabric||c.fabricQuality||'');
-    eSelLiner       = c.liner       || '';
-    eSelLinerStich  = c.linerStich  || '';
+      c.name = document.getElementById('e-name').value.trim();
+      c.phone = document.getElementById('e-phone').value.trim();
+      c.state = document.getElementById('e-state').value;
+      c.city = document.getElementById('e-city').value.trim();
+      c.nature = document.getElementById('e-nature').value;
+      c.status = document.getElementById('e-status').value;
+      c.segment = document.getElementById('e-segment').value;
+      c.companyNotes = document.getElementById('e-notes').value.trim();
+      c.otherProduct = document.getElementById('e-other-product').value.trim();
 
-    document.getElementById('edit-phone').value      = c.phone      || '';
-    document.getElementById('edit-bagSize').value    = c.bagSize    || '';
-    document.getElementById('edit-bagWeight').value  = c.bagWeight  || '';
-    document.getElementById('edit-gsm').value        = c.gsm        || '';
-    document.getElementById('edit-linerGram').value  = c.linerGram  || '';
-    document.getElementById('edit-quantity').value   = c.quantity   || '';
-    document.getElementById('edit-notes').value      = c.companyNotes|| '';
+      const ratingEl = document.querySelector('input[name="e-rating"]:checked');
+      if (ratingEl) c.rating = ratingEl.value;
 
-    const fabricStr = c.fabric || c.fabricQuality || '';
-    document.getElementById('edit-fabricOther').value = fabricStr.startsWith('Other:') ? fabricStr.replace('Other: ','').replace('Other:','') : '';
+      c.products = Array.from(document.querySelectorAll('input[name="e-products"]:checked')).map(el => el.value);
 
-    buildEditChips();
-    document.getElementById('spec-view').style.display='none';
-    document.getElementById('spec-edit').style.display='block';
-  }
+      saveCompany(c).then(() => {
+        showToast('Company updated');
+        editMode = false;
+        document.getElementById('company-view').classList.remove('hidden');
+        document.getElementById('company-edit').classList.add('hidden');
+        renderView(c);
+        renderReminders(c);
+      });
 
-  function cancelEditSpecs() {
-    document.getElementById('spec-view').style.display='block';
-    document.getElementById('spec-edit').style.display='none';
-  }
+      return false;
+    }
 
-  function saveSpecs() {
-    const fabricVal = eSelFabric==='Other'
-      ? ('Other: '+document.getElementById('edit-fabricOther').value.trim())
-      : eSelFabric;
-    const linerGram  = eSelLiner&&eSelLiner!=='No' ? document.getElementById('edit-linerGram').value.trim() : '';
-    const linerStich = eSelLiner&&eSelLiner!=='No' ? eSelLinerStich : '';
+    function handleDelete() {
+      const c = getCompany(currentId);
+      confirmDelete(currentId, c ? c.name : '');
+      // Override the confirm button to also redirect
+      setTimeout(() => {
+        const btn = document.getElementById('delete-modal-confirm');
+        if (btn) {
+          const origClick = btn.onclick;
+          btn.onclick = async () => {
+            await deleteCompany(currentId);
+            closeDeleteModal();
+            showToast('Company deleted');
+            setTimeout(() => { window.location.href = 'data.html'; }, 300);
+          };
+        }
+      }, 50);
+    }
 
-    updateCompany(companyId, {
-      phone:        document.getElementById('edit-phone').value.trim(),
-      bagSize:      document.getElementById('edit-bagSize').value.trim(),
-      bagWeight:    document.getElementById('edit-bagWeight').value.trim(),
-      gsm:          document.getElementById('edit-gsm').value.trim(),
-      lamination:   eSelLamination,
-      print:        eSelPrint,
-      fabric:       fabricVal,
-      liner:        eSelLiner,
-      linerStich:   linerStich,
-      linerGram:    linerGram,
-      quantity:     document.getElementById('edit-quantity').value.trim(),
-      companyNotes: document.getElementById('edit-notes').value.trim(),
+    // ── Reminders Section ──
+    function renderReminders(c) {
+      if (!c) return;
+      const reminders = getRemindersForCompany(c.id);
+      const active = reminders.filter(r => !r.completed).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+      const completed = reminders.filter(r => r.completed);
+
+      let html = `
+        <div class="detail-section" style="margin-top:16px;">
+          <h3>Reminders</h3>
+          <form onsubmit="return addReminder(event)" style="margin-bottom:16px;">
+            <div style="display:flex;gap:8px;">
+              <input type="date" class="form-control" id="r-date" required style="flex:1;" />
+              <input type="text" class="form-control" id="r-note" placeholder="Note" style="flex:2;" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm mt-8">Add Reminder</button>
+          </form>`;
+
+      if (active.length === 0 && completed.length === 0) {
+        html += `<p style="color:var(--text-muted);font-size:0.85rem;">No reminders set</p>`;
+      }
+
+      active.forEach(r => {
+        html += `
+          <div class="reminder-card">
+            <div class="rc-note">${escHtml(r.note || 'Reminder')}</div>
+            <div class="rc-date">📅 ${r.date}</div>
+            <div class="rc-actions">
+              <button class="btn btn-green btn-sm" onclick="completeReminder('${r.id}').then(()=>showToast('Done'))">✅ Done</button>
+              <button class="btn btn-red btn-sm" onclick="deleteReminder('${r.id}').then(()=>showToast('Deleted'))">🗑️</button>
+            </div>
+          </div>`;
+      });
+
+      if (completed.length > 0) {
+        html += `<div style="margin-top:12px;color:var(--text-muted);font-size:0.8rem;">Completed (${completed.length})</div>`;
+        completed.forEach(r => {
+          html += `<div class="reminder-card" style="opacity:0.5;">
+            <div class="rc-note" style="text-decoration:line-through;">${escHtml(r.note || 'Reminder')}</div>
+            <div class="rc-date">📅 ${r.date} — ✅ Completed</div>
+          </div>`;
+        });
+      }
+
+      html += `</div>`;
+      document.getElementById('reminder-section').innerHTML = html;
+    }
+
+    function addReminder(e) {
+      e.preventDefault();
+      const date = document.getElementById('r-date').value;
+      const note = document.getElementById('r-note').value.trim();
+      if (!date) return false;
+
+      const c = getCompany(currentId);
+      saveReminder({
+        id: genId(),
+        companyId: currentId,
+        companyName: c ? c.name : '',
+        companyPhone: c ? c.phone : '',
+        date,
+        note,
+        completed: false
+      }).then(() => {
+        showToast('Reminder added');
+        document.getElementById('r-date').value = '';
+        document.getElementById('r-note').value = '';
+      });
+      return false;
+    }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBottomNav('data');
+      currentId = getIdFromUrl();
+
+      if (!currentId) {
+        document.getElementById('company-view').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">❌</div>
+            <p>No company ID provided</p>
+          </div>`;
+        return;
+      }
+
+      onDataChange(() => {
+        const c = getCompany(currentId);
+        if (!editMode) renderView(c);
+        renderReminders(c);
+      });
+
+      setTimeout(() => {
+        const c = getCompany(currentId);
+        renderView(c);
+        renderReminders(c);
+      }, 600);
     });
-    cancelEditSpecs();
-    loadCompany();
-  }
-
-  // Status, Reminder, Delete handlers
-  function toggleStatus(){const dd=document.getElementById('status-dropdown'),bb=document.getElementById('status-backdrop');if(!dd.classList.contains('hidden')){closeStatus();return;}dd.classList.remove('hidden');bb.classList.remove('hidden');}
-  function closeStatus(){document.getElementById('status-dropdown').classList.add('hidden');document.getElementById('status-backdrop').classList.add('hidden');}
-  function doChangeStatus(s){changeStatus(companyId,s);closeStatus();loadCompany();}
-  function toggleAddReminder(){document.getElementById('add-reminder-box').classList.toggle('hidden');}
-  function cancelReminder(){document.getElementById('add-reminder-box').classList.add('hidden');}
-  function saveNewReminder(){
-    const d=document.getElementById('new-reminder-date').value, t=document.getElementById('new-reminder-time').value||'10:00';
-    if(!d){alert('Please select a date');return;}
-    addReminder(companyId,d,t); document.getElementById('add-reminder-box').classList.add('hidden'); loadCompany();
-  }
-  function confirmDelete(){const c=getCompany(companyId);if(!c)return;document.getElementById('delete-text').textContent=`Delete "${c.name}"? Cannot be undone.`;document.getElementById('delete-overlay').classList.remove('hidden');}
-  function closeDeleteConfirm(){document.getElementById('delete-overlay').classList.add('hidden');}
-  function doDelete(){deleteCompany(companyId);setTimeout(()=>{window.location.href='data.html';},300);}
-
-  loadCompany();
-</script>
+  </script>
 </body>
 </html>

@@ -2,374 +2,179 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#38a169" />
-  <title>Add Company – Dwarkesh Polyfab CRM</title>
-  <link rel="manifest" href="../manifest.json" />
-  <link rel="apple-touch-icon" href="../assets/icon-192.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="DP CRM" />
-  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Add Contact — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="icon" href="../assets/icon-192.png" type="image/png" />
-  <style>
-    .section-title {
-      font-size:11px; font-weight:800; color:#1a365d;
-      text-transform:uppercase; letter-spacing:.6px;
-      padding:12px 2px 6px; border-top:1px solid #e5e7eb;
-      margin-top:4px; display:flex; align-items:center; gap:6px;
-    }
-    .section-title:first-child { border-top:none; padding-top:4px; }
-    .liner-extra {
-      background:#fefce8; border:1px solid #fde68a;
-      border-radius:12px; padding:12px; margin-top:8px;
-      animation: fadeSlide .2s ease;
-    }
-    @keyframes fadeSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-    .fabric-other-input { margin-top:8px; }
-    .chip.selected-amber { background:#f59e0b; color:#fff; border-color:#f59e0b; }
-  </style>
+  <meta name="theme-color" content="#0f172a" />
 </head>
 <body>
-<div class="app">
 
   <!-- Header -->
-  <div class="header header-green">
-    <a href="../index.html" class="back-btn">&#8592;</a>
+  <div class="app-header">
+    <img src="../assets/logo.png" alt="Logo" class="logo" />
     <div>
-      <h1 class="header-title">Add Company</h1>
-      <p class="header-sub">Company info + bag specifications</p>
+      <h1>Add New Contact</h1>
+      <div class="subtitle">Dwarkesh Polyfab CRM</div>
     </div>
   </div>
 
-  <div class="alert alert-success hidden" id="success-msg">✅ Company saved successfully!</div>
+  <!-- Form -->
+  <div class="container">
+    <form id="add-form" onsubmit="return handleSubmit(event)">
 
-  <div class="page-body">
-
-    <!-- ══════════════ COMPANY INFO ══════════════ -->
-    <div class="section-title">🏢 Company Information</div>
-
-    <div class="field">
-      <label class="field-label">Company Name *</label>
-      <input type="text" class="input" id="inp-name" placeholder="e.g. Shree Ram Industries" />
-      <p class="field-error hidden" id="err-name">Company name is required</p>
-    </div>
-
-    <div class="field">
-      <label class="field-label">City *</label>
-      <div class="autocomplete">
-        <input type="text" class="input" id="inp-city" placeholder="Type or select city"
-               autocomplete="off" oninput="onCityInput()" onfocus="onCityFocus()" />
-        <p class="field-error hidden" id="err-city">City is required</p>
-        <div class="autocomplete-list hidden" id="city-dropdown"></div>
-        <div class="hidden" id="city-backdrop" onclick="closeCityDropdown()" style="position:fixed;inset:0;z-index:15"></div>
+      <!-- Name -->
+      <div class="form-group">
+        <label>Company Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="f-name" placeholder="Enter company name" required />
       </div>
-    </div>
 
-    <div class="field">
-      <label class="field-label">Nature *</label>
-      <div class="chip-group" id="nature-group"></div>
-    </div>
-
-    <div class="field">
-      <label class="field-label">📞 Phone Number</label>
-      <input type="tel" class="input" id="inp-phone" placeholder="e.g. 9876543210 (for call & WhatsApp)" />
-    </div>
-
-    <div class="field">
-      <label class="field-label">Status *</label>
-      <div class="chip-group" id="status-group"></div>
-    </div>
-
-    <!-- ══════════════ BAG SPECIFICATIONS ══════════════ -->
-    <div class="section-title">🛍️ Bag Specifications
-      <span style="font-size:9px;font-weight:400;color:#9ca3af;text-transform:none">(fill when customer gives details)</span>
-    </div>
-
-    <!-- Bag Size -->
-    <div class="field">
-      <label class="field-label">Bag Size</label>
-      <input type="text" class="input" id="inp-bagSize" placeholder="e.g. 24x36" />
-      <p style="font-size:10px;color:#9ca3af;margin-top:3px">Width × Height in inches</p>
-    </div>
-
-    <!-- Bag Weight -->
-    <div class="field">
-      <label class="field-label">Bag Weight</label>
-      <input type="text" class="input" id="inp-bagWeight" placeholder="e.g. 60 gram" />
-    </div>
-
-    <!-- GSM -->
-    <div class="field">
-      <label class="field-label">GSM</label>
-      <input type="text" class="input" id="inp-gsm" placeholder="e.g. 2.5" />
-    </div>
-
-    <!-- Lamination -->
-    <div class="field">
-      <label class="field-label">Lamination</label>
-      <div class="chip-group" id="lamination-group"></div>
-    </div>
-
-    <!-- Printing -->
-    <div class="field">
-      <label class="field-label">Printing</label>
-      <div class="chip-group" id="print-group"></div>
-    </div>
-
-    <!-- Fabric -->
-    <div class="field">
-      <label class="field-label">Fabric</label>
-      <div class="chip-group" id="fabric-group"></div>
-      <!-- "Other" text input – shows only when Other is selected -->
-      <div class="fabric-other-input hidden" id="fabric-other-wrap">
-        <input type="text" class="input" id="inp-fabricOther" placeholder="Describe fabric type..." />
+      <!-- Phone -->
+      <div class="form-group">
+        <label>Phone Number <span class="required">*</span></label>
+        <input type="tel" class="form-control" id="f-phone" placeholder="Enter phone number" required />
       </div>
-    </div>
 
-    <!-- Liner – with conditional extra fields -->
-    <div class="field">
-      <label class="field-label">Liner</label>
-      <div class="chip-group" id="liner-group"></div>
+      <!-- State -->
+      <div class="form-group">
+        <label>State <span class="required">*</span></label>
+        <select class="form-control" id="f-state" required></select>
+      </div>
 
-      <!-- Extra liner fields – hidden when "No" selected -->
-      <div class="liner-extra hidden" id="liner-extra">
-        <div class="field" style="margin-top:0">
-          <label class="field-label">Stich Type</label>
-          <div class="chip-group" id="liner-stich-group"></div>
-        </div>
-        <div class="field">
-          <label class="field-label">Liner Weight (gram)</label>
-          <input type="text" class="input input-sm" id="inp-linerGram" placeholder="e.g. 20 gram" />
+      <!-- City -->
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" class="form-control" id="f-city" placeholder="Enter city (optional)" />
+      </div>
+
+      <!-- Rating -->
+      <div class="form-group">
+        <label>Rating <span class="required">*</span></label>
+        <div class="radio-group" id="f-rating">
+          <label><input type="radio" name="rating" value="not_important" required /> Not Important</label>
+          <label><input type="radio" name="rating" value="3star" /> ⭐⭐⭐</label>
+          <label><input type="radio" name="rating" value="4star" /> ⭐⭐⭐⭐</label>
+          <label><input type="radio" name="rating" value="5star" /> ⭐⭐⭐⭐⭐</label>
         </div>
       </div>
-    </div>
 
-    <!-- Approx Quantity -->
-    <div class="field">
-      <label class="field-label">Approx Quantity <span style="font-size:10px;color:#9ca3af">(optional)</span></label>
-      <input type="text" class="input" id="inp-quantity" placeholder="e.g. 5000 bags / month" />
-    </div>
-
-    <!-- Extra Note -->
-    <div class="field">
-      <label class="field-label">📝 Extra Note</label>
-      <textarea class="textarea" id="inp-notes" placeholder="Any extra details, special requirements..." style="min-height:80px"></textarea>
-    </div>
-
-    <!-- ══════════════ SCHEDULE FOLLOW-UP ══════════════ -->
-    <div class="section-title">📅 Schedule Follow-up</div>
-
-    <div class="card">
-      <label class="toggle-row">
-        <input type="checkbox" id="schedule-toggle" onchange="toggleSchedule()" />
-        <div>
-          <p class="toggle-label">Set Reminder</p>
-          <p class="toggle-sub">Schedule first follow-up call reminder</p>
-        </div>
-      </label>
-      <div class="hidden" id="schedule-fields" style="margin-top:12px">
-        <div class="grid-2">
-          <input type="date" class="input input-sm" id="inp-followup-date" />
-          <input type="time" class="input input-sm" id="inp-followup-time" value="10:00" />
+      <!-- Products -->
+      <div class="form-group">
+        <label>Products <span class="required">*</span> (select at least 1)</label>
+        <div class="checkbox-group" id="f-products"></div>
+        <div id="other-product-wrap" class="hidden" style="margin-top:10px;">
+          <input type="text" class="form-control" id="f-other-product" placeholder="Specify other product" />
         </div>
       </div>
-    </div>
 
-  </div><!-- end page-body -->
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Requirements / Notes</label>
+        <textarea class="form-control" id="f-notes" placeholder="Enter notes or requirements (optional)"></textarea>
+      </div>
 
-  <!-- Sticky footer -->
-  <div class="page-footer">
-    <button class="btn btn-green btn-full btn-lg" onclick="handleSave()">✓ Save Company</button>
-    <button class="btn btn-outline-green btn-full" onclick="handleSaveAndAdd()">Save &amp; Add Another</button>
+      <!-- Quick Actions -->
+      <div class="action-row mb-16">
+        <button type="button" class="btn btn-green" style="flex:1" onclick="quickWhatsApp()">📱 WhatsApp</button>
+        <button type="button" class="btn btn-primary" style="flex:1" onclick="quickCall()">📞 Call</button>
+      </div>
+
+      <!-- Save -->
+      <button type="submit" class="btn btn-primary btn-block" id="save-btn" style="padding:14px; font-size:1rem;">
+        💾 Save Contact
+      </button>
+    </form>
   </div>
 
-</div>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
-<!-- Firebase Web SDK (v9 compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="../assets/app.js"></script>
-<script>
-  // ── State ──
-  let selNatureV    = 'Manufacturer';
-  let selStatusV    = 'Untouch';
-  let selCity       = '';
-  let selLamination = '';
-  let selPrint      = '';
-  let selFabric     = '';
-  let selLiner      = '';
-  let selLinerStich = '';
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/app.js"></script>
 
-  // ── Build all chip groups ──
-  function buildChips() {
-    // Nature
-    document.getElementById('nature-group').innerHTML = ALL_NATURES.map(n =>
-      `<button class="chip ${n===selNatureV?'selected':''}" onclick="pick('nature','${n}')">${n}</button>`
-    ).join('');
-
-    // Status
-    document.getElementById('status-group').innerHTML = ALL_STATUSES.map(s =>
-      `<button class="chip ${s===selStatusV?'selected':''}" style="font-size:11px" onclick="pick('status','${s}')">${s}</button>`
-    ).join('');
-
-    // Lamination
-    document.getElementById('lamination-group').innerHTML = BAG_LAMINATION_OPTIONS.map(l =>
-      `<button class="chip ${l===selLamination?'selected':''}" style="font-size:11px" onclick="pick('lamination','${l}')">${l}</button>`
-    ).join('');
-
-    // Print
-    document.getElementById('print-group').innerHTML = BAG_PRINT_OPTIONS.map(p =>
-      `<button class="chip ${p===selPrint?'selected':''}" onclick="pick('print','${p}')">${p}</button>`
-    ).join('');
-
-    // Fabric
-    document.getElementById('fabric-group').innerHTML = BAG_FABRIC_OPTIONS.map(f =>
-      `<button class="chip ${f===selFabric?'selected':''}" onclick="pick('fabric','${f}')">${f}</button>`
-    ).join('');
-
-    // Fabric "Other" input
-    const fabricOtherWrap = document.getElementById('fabric-other-wrap');
-    fabricOtherWrap.classList.toggle('hidden', selFabric !== 'Other');
-
-    // Liner
-    document.getElementById('liner-group').innerHTML = BAG_LINER_OPTIONS.map(l =>
-      `<button class="chip ${l===selLiner?'selected':''}" onclick="pick('liner','${l}')">${l}</button>`
-    ).join('');
-
-    // Liner extra fields (stich + gram) – only when liner ≠ No
-    const linerExtra = document.getElementById('liner-extra');
-    if (selLiner && selLiner !== 'No') {
-      linerExtra.classList.remove('hidden');
-      document.getElementById('liner-stich-group').innerHTML = BAG_LINER_STICH_OPTIONS.map(s =>
-        `<button class="chip ${s===selLinerStich?'selected':''}" onclick="pick('linerStich','${s}')">${s}</button>`
-      ).join('');
-    } else {
-      linerExtra.classList.add('hidden');
-    }
-
-    // Default date
-    document.getElementById('inp-followup-date').value = todayStr();
-  }
-
-  // ── Generic picker ──
-  function pick(field, val) {
-    if (field === 'nature')     { selNatureV    = val; }
-    if (field === 'status')     { selStatusV    = val; }
-    if (field === 'lamination') { selLamination = selLamination===val ? '' : val; }
-    if (field === 'print')      { selPrint      = selPrint===val      ? '' : val; }
-    if (field === 'fabric')     { selFabric     = selFabric===val     ? '' : val; }
-    if (field === 'liner')      { selLiner      = selLiner===val      ? '' : val; if(selLiner==='No') selLinerStich=''; }
-    if (field === 'linerStich') { selLinerStich = selLinerStich===val ? '' : val; }
-    buildChips();
-  }
-
-  // ── City autocomplete ──
-  function onCityInput() { selCity=''; showCityDd(document.getElementById('inp-city').value); }
-  function onCityFocus() { showCityDd(document.getElementById('inp-city').value); }
-  function showCityDd(q) {
-    const dd=document.getElementById('city-dropdown'), bb=document.getElementById('city-backdrop');
-    const f=CITIES.filter(c=>c.toLowerCase().includes(q.toLowerCase()));
-    dd.innerHTML = f.length
-      ? f.map(c=>`<div class="autocomplete-item" onclick="pickCity('${c}')">${c}</div>`).join('')
-      : `<div class="autocomplete-item" style="color:#2563eb" onclick="useCustomCity()">Use "${q}"</div>`;
-    dd.classList.remove('hidden'); bb.classList.remove('hidden');
-  }
-  function pickCity(c) {
-    selCity=c; document.getElementById('inp-city').value=c;
-    document.getElementById('city-dropdown').classList.add('hidden');
-    document.getElementById('city-backdrop').classList.add('hidden');
-    document.getElementById('err-city').classList.add('hidden');
-  }
-  function useCustomCity() {
-    selCity=document.getElementById('inp-city').value.trim();
-    document.getElementById('city-dropdown').classList.add('hidden');
-    document.getElementById('city-backdrop').classList.add('hidden');
-  }
-  function closeCityDropdown() {
-    document.getElementById('city-dropdown').classList.add('hidden');
-    document.getElementById('city-backdrop').classList.add('hidden');
-  }
-
-  function toggleSchedule() {
-    document.getElementById('schedule-fields').classList.toggle('hidden', !document.getElementById('schedule-toggle').checked);
-  }
-
-  // ── Get all form values ──
-  function getVals() {
-    const fabricVal = selFabric === 'Other'
-      ? ('Other: ' + document.getElementById('inp-fabricOther').value.trim())
-      : selFabric;
-
-    const linerVal = selLiner;
-    const linerGram  = selLiner && selLiner !== 'No' ? document.getElementById('inp-linerGram').value.trim() : '';
-    const linerStich = selLiner && selLiner !== 'No' ? selLinerStich : '';
-
-    return {
-      name:          document.getElementById('inp-name').value.trim(),
-      city:          selCity || document.getElementById('inp-city').value.trim(),
-      nature:        selNatureV,
-      phone:         document.getElementById('inp-phone').value.trim(),
-      status:        selStatusV,
-      bagSize:       document.getElementById('inp-bagSize').value.trim(),
-      bagWeight:     document.getElementById('inp-bagWeight').value.trim(),
-      gsm:           document.getElementById('inp-gsm').value.trim(),
-      lamination:    selLamination,
-      print:         selPrint,
-      fabric:        fabricVal,
-      liner:         linerVal,
-      linerStich:    linerStich,
-      linerGram:     linerGram,
-      quantity:      document.getElementById('inp-quantity').value.trim(),
-      companyNotes:  document.getElementById('inp-notes').value.trim(),
-    };
-  }
-
-  // ── Validate ──
-  function validate(v) {
-    document.getElementById('err-name').classList.toggle('hidden', !!v.name);
-    document.getElementById('err-city').classList.toggle('hidden', !!v.city);
-    return !!(v.name && v.city);
-  }
-
-  // ── Save ──
-  function doSave(v) {
-    const c = addCompany(v);
-    if (document.getElementById('schedule-toggle').checked) {
-      const d = document.getElementById('inp-followup-date').value;
-      const t = document.getElementById('inp-followup-time').value || '10:00';
-      if (d) addReminder(c.id, d, t);
-    }
-    return c;
-  }
-
-  function handleSave() {
-    const v = getVals(); if (!validate(v)) return;
-    doSave(v);
-    document.getElementById('success-msg').classList.remove('hidden');
-    setTimeout(() => { window.location.href = 'data.html'; }, 800);
-  }
-
-  function handleSaveAndAdd() {
-    const v = getVals(); if (!validate(v)) return; doSave(v);
-    const msg = document.getElementById('success-msg');
-    msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 1200);
-    // Reset
-    ['inp-name','inp-city','inp-phone','inp-bagSize','inp-bagWeight','inp-gsm',
-     'inp-fabricOther','inp-linerGram','inp-quantity','inp-notes'].forEach(id => {
-       const el = document.getElementById(id); if (el) el.value = '';
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBottomNav('add');
+      populateStateDropdown(document.getElementById('f-state'), '');
+      buildProductCheckboxes();
     });
-    document.getElementById('schedule-toggle').checked = false;
-    document.getElementById('schedule-fields').classList.add('hidden');
-    selCity=''; selNatureV='Manufacturer'; selStatusV='Untouch';
-    selLamination=''; selPrint=''; selFabric=''; selLiner=''; selLinerStich='';
-    buildChips();
-    document.getElementById('inp-name').focus();
-  }
 
-  // Init
-  buildChips();
-</script>
+    function buildProductCheckboxes() {
+      const wrap = document.getElementById('f-products');
+      wrap.innerHTML = PRODUCT_OPTIONS.map(p =>
+        `<label><input type="checkbox" name="products" value="${p.value}" onchange="onProductChange()" /> ${p.label}</label>`
+      ).join('');
+    }
+
+    function onProductChange() {
+      const otherChecked = document.querySelector('input[name="products"][value="other"]');
+      document.getElementById('other-product-wrap').classList.toggle('hidden', !otherChecked || !otherChecked.checked);
+    }
+
+    function quickWhatsApp() {
+      const phone = document.getElementById('f-phone').value;
+      if (!phone) { showToast('Enter phone number first'); return; }
+      openWhatsApp(phone);
+    }
+
+    function quickCall() {
+      const phone = document.getElementById('f-phone').value;
+      if (!phone) { showToast('Enter phone number first'); return; }
+      callPhone(phone);
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('f-name').value.trim();
+      const phone = document.getElementById('f-phone').value.trim();
+      const state = document.getElementById('f-state').value;
+      const city = document.getElementById('f-city').value.trim();
+      const notes = document.getElementById('f-notes').value.trim();
+      const otherProduct = document.getElementById('f-other-product').value.trim();
+
+      // Rating
+      const ratingEl = document.querySelector('input[name="rating"]:checked');
+      if (!ratingEl) { showToast('Please select a rating'); return false; }
+      const rating = ratingEl.value;
+
+      // Products
+      const checkedProducts = Array.from(document.querySelectorAll('input[name="products"]:checked')).map(el => el.value);
+      if (checkedProducts.length === 0) { showToast('Please select at least one product'); return false; }
+
+      const company = {
+        id: genId(),
+        name,
+        phone,
+        state,
+        city,
+        rating,
+        products: checkedProducts,
+        otherProduct: checkedProducts.includes('other') ? otherProduct : '',
+        companyNotes: notes,
+        nature: '',
+        status: 'Untouch',
+        segment: 'new_arrival',
+        source: 'manual',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      document.getElementById('save-btn').disabled = true;
+      document.getElementById('save-btn').textContent = 'Saving...';
+
+      saveCompany(company).then(() => {
+        showToast('Contact saved!');
+        setTimeout(() => { window.location.href = 'data.html'; }, 600);
+      }).catch(err => {
+        showToast('Error: ' + err.message);
+        document.getElementById('save-btn').disabled = false;
+        document.getElementById('save-btn').textContent = '💾 Save Contact';
+      });
+
+      return false;
+    }
+  </script>
 </body>
 </html>
