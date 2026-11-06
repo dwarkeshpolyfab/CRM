@@ -81,7 +81,7 @@ function cleanPhone(phone) {
 }
 
 function getProductLabel(val) {
-  const p = PRODUCT_OPTIONS.find(o => o.value === val);
+  const p = PRODUCT_OPTIONS.find(o => ✅value === val);
   return p ? p.label : val;
 }
 
@@ -327,7 +327,8 @@ function buildStatusBadge(status) {
 function buildCompanyCard(c, opts = {}) {
   const showDelete = opts.showDelete !== false;
   const linkTo = opts.linkTo !== false;
-  const basePath = opts.basePath || 'pages/';
+  const isSubpage = window.location.pathname.includes('/pages/');
+  const basePath = opts.basePath !== undefined ? opts.basePath : (isSubpage ? '' : 'pages/');
 
   let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${basePath}company.html?id=${c.id}'"` : ''}>`;
   html += `<div class="cc-top">`;
