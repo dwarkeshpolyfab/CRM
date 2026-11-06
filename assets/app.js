@@ -13,10 +13,10 @@ const FIREBASE_CONFIG = {
 };
 
 // ── Init Firebase ──
-if (!firebase.apps.length) {
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
   firebase.initializeApp(FIREBASE_CONFIG);
 }
-const _fireDB = firebase.database();
+const _fireDB = (typeof firebase !== 'undefined') ? firebase.database() : null;
 
 // ── All Indian States ──
 const INDIAN_STATES = [
@@ -48,9 +48,9 @@ const PRODUCT_OPTIONS = [
 // ── Rating Options ──
 const RATING_OPTIONS = [
   { value: "not_important", label: "Not Important", stars: "" },
-  { value: "3star",         label: "⭐⭐⭐",       stars: "⭐⭐⭐" },
-  { value: "4star",         label: "⭐⭐⭐⭐",     stars: "⭐⭐⭐⭐" },
-  { value: "5star",         label: "⭐⭐⭐⭐⭐",   stars: "⭐⭐⭐⭐⭐" }
+  { value: "3star",         label: "⭐⭐⭐ (3 Star)",       stars: "⭐⭐⭐" },
+  { value: "4star",         label: "⭐⭐⭐⭐ (4 Star)",     stars: "⭐⭐⭐⭐" },
+  { value: "5star",         label: "⭐⭐⭐⭐⭐ (5 Star)",   stars: "⭐⭐⭐⭐⭐" }
 ];
 
 // ── Status Options ──
@@ -81,7 +81,7 @@ function cleanPhone(phone) {
 }
 
 function getProductLabel(val) {
-  const p = PRODUCT_OPTIONS.find(o => ✅value === val);
+  const p = PRODUCT_OPTIONS.find(o => o.value === val);
   return p ? p.label : val;
 }
 
@@ -90,6 +90,7 @@ function getRatingStars(rating) {
     case '3star': return '⭐⭐⭐';
     case '4star': return '⭐⭐⭐⭐';
     case '5star': return '⭐⭐⭐⭐⭐';
+    case 'not_important': return '⚪ Not Important';
     default: return '—';
   }
 }
@@ -139,59 +140,55 @@ let _dataListeners = [];
 
 // ── Firebase Live Listener ──
 function initLiveListener() {
+  if (!_fireDB) return;
+
   _fireDB.ref('crm_data/companies').on('value', snap => {
     _companiesCache = snap.val() || {};
-    _dataListeners.forEach(fn => { try { fn(_companiesCache); } catch(e) { console.error(e); } });
+    try {
+      localStorage.setItem('crm_companies_cache', JSON.stringify(_companiesCache));
+    } catch(e) {}
+    notifyListeners();
   });
+
   _fireDB.ref('crm_data/reminders').on('value', snap => {
     _remindersCache = snap.val() || {};
-    _dataListeners.forEach(fn => { try { fn(_companiesCache); } catch(e) { console.error(e); } });
+    try {
+      localStorage.setItem('crm_reminders_cache', JSON.stringify(_remindersCache));
+    } catch(e) {}
+    notifyListeners();
+  });
+
+  // Load local cache immediately
+  try {
+    const cc = localStorage.getItem('crm_companies_cache');
+    if (cc) _companiesCache = JSON.parse(cc);
+    const rc = localStorage.getItem('crm_reminders_cache');
+    if (rc) _remindersCache = JSON.parse(rc);
+  } catch(e) {}
+  notifyListeners();
+}
+
+function onDataChange(cb) {
+  _dataListeners.push(cb);
+}
+
+function notifyListeners() {
+  _dataListeners.forEach(fn => {
+    try { fn(); } catch(e) { console.error(e); }
   });
 }
 
-function onDataChange(fn) {
-  _dataListeners.push(fn);
-}
-
-// ── CRUD: Companies ──
-function saveCompany(company) {
-  if (!company.id) company.id = genId();
-  company.updatedAt = new Date().toISOString();
-  if (!company.createdAt) company.createdAt = company.updatedAt;
-  if (!company.source) company.source = 'manual';
-  if (!company.segment) company.segment = 'new_arrival';
-  if (!company.status) company.status = 'Untouch';
-  if (!company.rating) company.rating = 'not_set';
-  return _fireDB.ref('crm_data/companies/' + company.id).set(company);
-}
-
-function deleteCompany(id) {
-  return _fireDB.ref('crm_data/companies/' + id).remove();
+// ── Data Accessors ──
+function getAllCompanies() {
+  return Object.values(_companiesCache);
 }
 
 function getCompany(id) {
   return _companiesCache[id] || null;
 }
 
-function getAllCompanies() {
-  return Object.values(_companiesCache);
-}
-
-// ── CRUD: Reminders ──
-function saveReminder(reminder) {
-  if (!reminder.id) reminder.id = genId();
-  reminder.updatedAt = new Date().toISOString();
-  if (!reminder.createdAt) reminder.createdAt = reminder.updatedAt;
-  if (!reminder.completed) reminder.completed = false;
-  return _fireDB.ref('crm_data/reminders/' + reminder.id).set(reminder);
-}
-
-function deleteReminder(id) {
-  return _fireDB.ref('crm_data/reminders/' + id).remove();
-}
-
-function completeReminder(id) {
-  return _fireDB.ref('crm_data/reminders/' + id).update({ completed: true, completedAt: new Date().toISOString() });
+function getNewArrivalsCount() {
+  return getAllCompanies().filter(c => c.segment === 'new_arrival').length;
 }
 
 function getAllReminders() {
@@ -202,56 +199,122 @@ function getRemindersForCompany(companyId) {
   return getAllReminders().filter(r => r.companyId === companyId);
 }
 
-// ── Reminder Filters ──
-function getTodayStr() {
+function getTodayDateStr() {
   const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function getTodayReminders() {
-  const today = getTodayStr();
-  return getAllReminders().filter(r => !r.completed && r.date === today);
+  const today = getTodayDateStr();
+  return getAllReminders().filter(r => r.date === today && !r.completed);
 }
 
 function getMissedReminders() {
-  const today = getTodayStr();
-  return getAllReminders().filter(r => !r.completed && r.date < today);
+  const today = getTodayDateStr();
+  return getAllReminders().filter(r => r.date < today && !r.completed);
 }
 
 function getUpcomingReminders() {
-  const today = getTodayStr();
-  return getAllReminders().filter(r => !r.completed && r.date > today);
+  const today = getTodayDateStr();
+  return getAllReminders().filter(r => r.date > today && !r.completed);
 }
 
-// ── Segment Counts ──
-function getNewArrivalsCount() {
-  return getAllCompanies().filter(c => c.segment === 'new_arrival').length;
+// ── Firebase Mutations ──
+function saveCompany(company) {
+  if (!company.id) company.id = genId();
+  company.updatedAt = new Date().toISOString();
+  if (!company.createdAt) company.createdAt = company.updatedAt;
+
+  _companiesCache[company.id] = company;
+  notifyListeners();
+
+  if (_fireDB) {
+    return _fireDB.ref('crm_data/companies/' + company.id).set(company);
+  }
+  return Promise.resolve();
 }
 
-// ── Filter Companies (cross-filter, AND logic) ──
-function filterCompanies(filters) {
+function deleteCompany(id) {
+  delete _companiesCache[id];
+  notifyListeners();
+
+  if (_fireDB) {
+    return _fireDB.ref('crm_data/companies/' + id).remove();
+  }
+  return Promise.resolve();
+}
+
+function saveReminder(reminder) {
+  if (!reminder.id) reminder.id = genId();
+  reminder.updatedAt = new Date().toISOString();
+  if (!reminder.createdAt) reminder.createdAt = reminder.updatedAt;
+
+  _remindersCache[reminder.id] = reminder;
+  notifyListeners();
+
+  if (_fireDB) {
+    return _fireDB.ref('crm_data/reminders/' + reminder.id).set(reminder);
+  }
+  return Promise.resolve();
+}
+
+function completeReminder(id) {
+  if (_remindersCache[id]) {
+    _remindersCache[id].completed = true;
+    _remindersCache[id].completedAt = new Date().toISOString();
+    notifyListeners();
+  }
+  if (_fireDB) {
+    return _fireDB.ref('crm_data/reminders/' + id).update({
+      completed: true,
+      completedAt: new Date().toISOString()
+    });
+  }
+  return Promise.resolve();
+}
+
+function deleteReminder(id) {
+  delete _remindersCache[id];
+  notifyListeners();
+
+  if (_fireDB) {
+    return _fireDB.ref('crm_data/reminders/' + id).remove();
+  }
+  return Promise.resolve();
+}
+
+// ── Filter Companies ──
+function filterCompanies(filters = {}) {
   let list = getAllCompanies();
 
   if (filters.search) {
-    const s = filters.search.toLowerCase();
+    const q = filters.search.toLowerCase();
     list = list.filter(c =>
-      (c.name && c.name.toLowerCase().includes(s)) ||
-      (c.phone && c.phone.includes(s)) ||
-      (c.city && c.city.toLowerCase().includes(s))
+      (c.name && c.name.toLowerCase().includes(q)) ||
+      (c.phone && c.phone.includes(q)) ||
+      (c.city && c.city.toLowerCase().includes(q))
     );
   }
+
   if (filters.rating && filters.rating !== 'all') {
     list = list.filter(c => c.rating === filters.rating);
   }
+
   if (filters.state && filters.state !== 'all') {
     list = list.filter(c => c.state === filters.state);
   }
+
   if (filters.product && filters.product !== 'all') {
     list = list.filter(c => c.products && c.products.includes(filters.product));
   }
+
   if (filters.status && filters.status !== 'all') {
     list = list.filter(c => c.status === filters.status);
   }
+
   if (filters.segment && filters.segment !== 'all') {
     list = list.filter(c => c.segment === filters.segment);
   }
@@ -259,7 +322,7 @@ function filterCompanies(filters) {
   return list;
 }
 
-// ── Export / Import Backup ──
+// ── Backup Export / Import ──
 function exportBackup() {
   const data = {
     companies: _companiesCache,
@@ -270,50 +333,48 @@ function exportBackup() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'dwarkesh-crm-backup-' + getTodayStr() + '.json';
+  a.download = `dwarkesh-crm-backup-${getTodayDateStr()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Backup downloaded');
 }
 
 function importBackup(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if (data.companies) {
-          await _fireDB.ref('crm_data/companies').set(data.companies);
-        }
-        if (data.reminders) {
-          await _fireDB.ref('crm_data/reminders').set(data.reminders);
-        }
-        showToast('Backup imported successfully');
-        resolve();
-      } catch (err) {
-        showToast('Import failed: ' + err.message);
-        reject(err);
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.companies && _fireDB) {
+        _fireDB.ref('crm_data/companies').update(data.companies);
       }
-    };
-    reader.readAsText(file);
-  });
+      if (data.reminders && _fireDB) {
+        _fireDB.ref('crm_data/reminders').update(data.reminders);
+      }
+      showToast('Backup imported successfully!');
+    } catch(err) {
+      alert('Invalid backup file');
+    }
+  };
+  reader.readAsText(file);
 }
 
-// ── Service Worker Registration ──
+// ── Service Worker ──
 function registerSW() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.log('SW registration failed:', err);
+    });
   }
 }
 
-// ── Notification Permission ──
+// ── Request Notification Permission ──
 function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
 }
 
-// ── Build Helpers (for rendering) ──
+// ── Build Helpers ──
 function buildProductTags(products) {
   if (!products || !products.length) return '';
   return products.map(p => `<span class="tag">${getProductLabel(p)}</span>`).join('');
@@ -341,7 +402,7 @@ function buildCompanyCard(c, opts = {}) {
   html += `</div>`;
   html += `<div class="cc-tags">${buildProductTags(c.products)} ${buildStatusBadge(c.status)}</div>`;
   html += `<div class="action-row" onclick="event.stopPropagation()">`;
-  html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">📱 WhatsApp</button>`;
+  html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">💬 WhatsApp</button>`;
   html += `<button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>`;
   if (showDelete) {
     html += `<button class="btn btn-red btn-sm" onclick="confirmDelete('${c.id}','${escAttr(c.name)}')">🗑️</button>`;
@@ -391,7 +452,7 @@ function closeDeleteModal() {
   if (_deleteModal) _deleteModal.classList.remove('open');
 }
 
-// ── Populate State Dropdown ──
+// ── Populate State Dropdowns ──
 function populateStateDropdown(selectEl, selectedVal) {
   let html = '<option value="">Select State</option>';
   INDIAN_STATES.forEach(st => {
@@ -400,7 +461,6 @@ function populateStateDropdown(selectEl, selectedVal) {
   selectEl.innerHTML = html;
 }
 
-// ── Populate State Filter Dropdown (with "All") ──
 function populateStateFilter(selectEl, selectedVal) {
   let html = '<option value="all">All States</option>';
   INDIAN_STATES.forEach(st => {
@@ -409,7 +469,7 @@ function populateStateFilter(selectEl, selectedVal) {
   selectEl.innerHTML = html;
 }
 
-// ── Build Bottom Nav ──
+// ── Bottom Navigation ──
 function renderBottomNav(activePage) {
   const isSubpage = window.location.pathname.includes('/pages/');
   const prefix = isSubpage ? '../' : '';
@@ -426,7 +486,7 @@ function renderBottomNav(activePage) {
       <span class="nav-icon">📊</span>Data
     </a>
     <a href="${prefix}pages/reminders.html" class="${activePage==='reminders'?'active':''}">
-      <span class="nav-icon">🔔</span>Reminders
+      <span class="nav-icon">⏰</span>Reminders
     </a>`;
 }
 

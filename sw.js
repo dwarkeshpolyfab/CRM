@@ -3,9 +3,9 @@
 //  Handles background notifications for reminders
 // ============================================================
 
-const CACHE_NAME = 'dp-crm-v4';
+const CACHE_NAME = 'dp-crm-v5';
 
-// 📦 Cache app files for offline use 📦
+// ðŸ“¦ Cache app files for offline use ðŸ“¦
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll([
@@ -24,7 +24,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// 🧹 DELETE ALL OLD CACHES on activate 🧹
+// ðŸ§¹ DELETE ALL OLD CACHES on activate ðŸ§¹
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -40,7 +40,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 📣 Show notification (called from app via postMessage) 📣
+// ðŸ“£ Show notification (called from app via postMessage) ðŸ“£
 self.addEventListener('message', event => {
   if (!event.data) return;
 
@@ -57,8 +57,8 @@ self.addEventListener('message', event => {
         requireInteraction: true,  // stays on screen until user taps
         data:             { reminderId, companyId },
         actions: [
-          { action: 'open',    title: '📋 Open Reminder' },
-          { action: 'dismiss', title: '✕ Dismiss'        },
+          { action: 'open',    title: 'ðŸ“‹ Open Reminder' },
+          { action: 'dismiss', title: 'âœ• Dismiss'        },
         ]
       })
     );
@@ -70,7 +70,7 @@ self.addEventListener('message', event => {
   }
 });
 
-// 📲 Handle notification tap 📲
+// ðŸ“² Handle notification tap ðŸ“²
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -94,7 +94,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// 🌐 Network first, then cache (always fetch fresh content) 🌐
+// ðŸŒ Network first, then cache (always fetch fresh content) ðŸŒ
 self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
