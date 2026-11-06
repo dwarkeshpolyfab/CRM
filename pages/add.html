@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Add Contact â€” Dwarkesh CRM</title>
+  <title>Add Contact — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#112a46" />
 </head>
 <body>
 
   <!-- Header -->
   <div class="app-header">
-    <a href="../index.html" class="back-btn" title="Back to Home">â€¹</a>
+    <a href="../index.html" class="back-btn" title="Back to Home">&#8592;</a>
     <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
     <div class="brand-info">
       <h1 class="brand-title">ADD NEW CONTACT</h1>
@@ -34,13 +34,12 @@
           <input type="tel" class="form-control" id="inp-phone" placeholder="e.g. 9876543210 (10 digits)" required />
         </div>
 
-        <!-- Quick Call & WhatsApp while adding -->
         <div class="action-row" style="margin-top: 10px;">
           <button type="button" class="btn btn-green btn-sm" onclick="openWhatsApp(document.getElementById('inp-phone').value)">
-            ðŸ’¬ WhatsApp
+            WhatsApp
           </button>
           <button type="button" class="btn btn-primary btn-sm" onclick="callPhone(document.getElementById('inp-phone').value)">
-            ðŸ“ž Call
+            Call
           </button>
         </div>
       </div>
@@ -48,33 +47,32 @@
       <!-- Place & Location -->
       <div class="form-card">
         <div class="form-group">
-          <label>Place <span class="required">*</span> <small style="color:var(--text-muted);font-weight:normal;">(Type "Gu" for Gujarat, "India" for other, or "Export")</small></label>
+          <label>Place <span class="required">*</span> <small style="color:var(--tagline-color);font-weight:normal;">(Type "Gu" for Gujarat, "India", or "Export")</small></label>
           <input type="text" class="form-control" id="inp-place" list="place-list-options" placeholder="Type place (e.g. Gujarat, Maharashtra, Export...)" required oninput="handlePlaceChange(this.value)" />
           <datalist id="place-list-options"></datalist>
         </div>
 
-        <!-- Export Country (Shows ONLY when Export is selected) -->
         <div class="form-group hidden" id="group-export-country">
           <label>Export Country Name <span class="required">*</span></label>
           <input type="text" class="form-control" id="inp-country" placeholder="e.g. USA, UAE, South Africa, Germany..." />
         </div>
 
         <div class="form-group">
-          <label>City <small style="color:var(--text-muted);font-weight:normal;">(Optional)</small></label>
+          <label>City <small style="color:var(--tagline-color);font-weight:normal;">(Optional)</small></label>
           <input type="text" class="form-control" id="inp-city" placeholder="e.g. Morbi, Ahmedabad, Surat..." />
         </div>
       </div>
 
-      <!-- Compulsory Star Rating -->
+      <!-- Star Rating Priority -->
       <div class="form-card">
-        <label style="font-weight:700;margin-bottom:8px;display:block;">
+        <label style="font-weight:800;color:var(--gold-light);margin-bottom:8px;display:block;">
           Rating Priority <span class="required">*</span>
         </label>
         <div class="rating-picker">
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="5star" required />
             <div class="r-body">
-              <span class="r-stars">â­â­â­â­â­</span>
+              <span class="r-stars star-rating">★★★★★</span>
               <span class="r-label">5 Star (Top Lead)</span>
             </div>
           </label>
@@ -82,7 +80,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="4star" />
             <div class="r-body">
-              <span class="r-stars">â­â­â­â­</span>
+              <span class="r-stars star-rating">★★★★</span>
               <span class="r-label">4 Star (Good Lead)</span>
             </div>
           </label>
@@ -90,7 +88,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="3star" />
             <div class="r-body">
-              <span class="r-stars">â­â­â­</span>
+              <span class="r-stars star-rating">★★★</span>
               <span class="r-label">3 Star (Follow-up)</span>
             </div>
           </label>
@@ -98,38 +96,37 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="not_important" />
             <div class="r-body">
-              <span class="r-stars">âšª</span>
-              <span class="r-label">Not Important</span>
+              <span class="r-stars star-not-important">Not Important</span>
+              <span class="r-label">Low priority / No follow-up</span>
             </div>
           </label>
         </div>
       </div>
 
-      <!-- Product Requirements (Multi-Select) -->
+      <!-- Product Requirements -->
       <div class="form-card">
-        <label style="font-weight:700;margin-bottom:8px;display:block;">
-          Product Requirements <span class="required">*</span> <small style="color:var(--text-muted);font-weight:normal;">(Select 1 or more)</small>
+        <label style="font-weight:800;color:var(--gold-light);margin-bottom:8px;display:block;">
+          Product Requirements <span class="required">*</span> <small style="color:var(--tagline-color);font-weight:normal;">(Select 1 or more)</small>
         </label>
         <div class="product-grid" id="product-checkbox-grid"></div>
 
-        <!-- Other Product Details input -->
         <div class="form-group hidden" id="group-other-product" style="margin-top:12px;">
           <label>Specify Other Product / Bag Requirement:</label>
           <input type="text" class="form-control" id="inp-other-product" placeholder="Describe the bag type or size..." />
         </div>
       </div>
 
-      <!-- Notes / Specific Inquiry -->
+      <!-- Inquiry Details / Notes -->
       <div class="form-card">
         <div class="form-group">
-          <label>Inquiry Details / Notes <small style="color:var(--text-muted);font-weight:normal;">(Optional)</small></label>
+          <label>Inquiry Details / Notes <small style="color:var(--tagline-color);font-weight:normal;">(Optional)</small></label>
           <textarea class="form-control" id="inp-notes" rows="3" placeholder="Add any bag size, GSM, quantity, or conversation notes..."></textarea>
         </div>
       </div>
 
-      <!-- Save Button -->
+      <!-- 🌟 Prominent Save Button 🌟 -->
       <button type="submit" class="btn-save-prominent" id="btn-save" style="margin-bottom:30px;">
-        ðŸ’¾ Save Contact
+        Save Contact
       </button>
     </form>
   </div>
@@ -222,7 +219,7 @@
         products: selectedProducts,
         otherProduct,
         companyNotes: notes,
-        segment: 'categorized', // Directly categorized!
+        segment: 'categorized',
         source: 'manual'
       };
 
@@ -234,7 +231,7 @@
       }).catch(err => {
         alert('Error saving: ' + err.message);
         saveBtn.disabled = false;
-        saveBtn.textContent = 'ðŸ’¾ Save Contact';
+        saveBtn.textContent = 'Save Contact';
       });
 
       return false;

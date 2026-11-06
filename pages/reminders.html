@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Reminders — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#112a46" />
 </head>
 <body>
 
@@ -15,7 +15,7 @@
     <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
     <div class="brand-info">
       <h1 class="brand-title">FOLLOW-UP REMINDERS</h1>
-      <div class="brand-tagline">Track Scheduled Calls & Inquiries</div>
+      <div class="brand-tagline">Track Calls & Schedule Next Dates</div>
     </div>
   </div>
 
@@ -39,6 +39,29 @@
 
   </div>
 
+  <!-- Reschedule Modal -->
+  <div class="modal-overlay" id="reschedule-modal">
+    <div class="modal-box">
+      <h3 style="color:var(--gold-light);">📅 Reschedule Follow-up</h3>
+      <p id="reschedule-customer-name" style="font-weight:700;color:#fff;margin-bottom:12px;"></p>
+      
+      <div class="form-group">
+        <label>New Follow-up Date <span class="required">*</span></label>
+        <input type="date" class="form-control" id="reschedule-date" required />
+      </div>
+
+      <div class="form-group" style="margin-top:10px;">
+        <label>Next Step / Note</label>
+        <input type="text" class="form-control" id="reschedule-note" placeholder="e.g. Call for price negotiation..." />
+      </div>
+
+      <div class="modal-actions" style="margin-top:18px;">
+        <button class="btn btn-outline" onclick="closeRescheduleModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmReschedule()">Save & Remove from Today</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
@@ -49,6 +72,9 @@
 
   <script>
     let currentTab = 'today';
+    let targetReminderId = null;
+    let targetCompanyId = null;
+    let targetCompanyName = null;
 
     function initTabFromUrl() {
       const p = new URLSearchParams(window.location.search);
@@ -96,7 +122,7 @@
 
       container.innerHTML = list.map(r => {
         const c = getCompany(r.companyId);
-        const name = r.companyName || (c ? c.name : 'Unknown Contact');
+        const name = r.companyName || (c ? c.name : 'Customer');
         const phone = r.companyPhone || (c ? c.phone : '');
         const isMissed = (currentTab === 'missed');
 
@@ -112,15 +138,18 @@
               </div>
             </div>
 
-            <div class="rc-actions" style="margin-top:12px;display:flex;gap:8px;">
+            <div class="rc-actions" style="margin-top:12px;display:flex;gap:6px;">
               <button class="btn btn-green btn-sm flex-1" onclick="openWhatsApp('${escAttr(phone)}')">
                 💬 WhatsApp
               </button>
               <button class="btn btn-primary btn-sm flex-1" onclick="callPhone('${escAttr(phone)}')">
                 📞 Call
               </button>
-              <button class="btn btn-outline btn-sm flex-1" onclick="handleCompleteReminder('${r.id}')">
-                ✅ Done / Updated
+              <button class="btn btn-outline btn-sm flex-1" style="border-color:var(--gold);color:var(--gold-light);" onclick="openRescheduleModal('${r.id}', '${escAttr(name)}', '${r.companyId}', '${escAttr(r.note||'')}')">
+                📅 Next Date
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="handleCompleteReminder('${r.id}')" title="Mark Done">
+                ✅ Done
               </button>
             </div>
           </div>
@@ -128,9 +157,61 @@
       }).join('');
     }
 
+    function openRescheduleModal(remId, compName, compId, currentNote) {
+      targetReminderId = remId;
+      targetCompanyId = compId;
+      targetCompanyName = compName;
+
+      document.getElementById('reschedule-customer-name').textContent = compName;
+      document.getElementById('reschedule-note').value = currentNote;
+      document.getElementById('reschedule-date').value = '';
+
+      document.getElementById('reschedule-modal').classList.add('open');
+      document.getElementById('reschedule-date').focus();
+    }
+
+    function closeRescheduleModal() {
+      document.getElementById('reschedule-modal').classList.remove('open');
+      targetReminderId = null;
+      targetCompanyId = null;
+      targetCompanyName = null;
+    }
+
+    // 🌟 SMART ROLLOVER: Completes current reminder, adds new date, removes from Today! 🌟
+    async function confirmReschedule() {
+      const newDate = document.getElementById('reschedule-date').value;
+      const newNote = document.getElementById('reschedule-note').value.trim();
+
+      if (!newDate) {
+        alert('Please choose a new follow-up date!');
+        return;
+      }
+
+      // 1. Complete the existing reminder (so it NO LONGER shows on Today or Missed!)
+      if (targetReminderId) {
+        await completeReminder(targetReminderId);
+      }
+
+      // 2. Save the new reminder for the chosen date
+      const c = getCompany(targetCompanyId);
+      await saveReminder({
+        id: genId(),
+        companyId: targetCompanyId,
+        companyName: targetCompanyName || (c ? c.name : ''),
+        companyPhone: c ? c.phone : '',
+        date: newDate,
+        note: newNote || 'Follow-up Call',
+        completed: false
+      });
+
+      closeRescheduleModal();
+      showToast('✅ Next date set! Removed from Today.');
+      renderRemindersPage();
+    }
+
     function handleCompleteReminder(id) {
       completeReminder(id).then(() => {
-        showToast('Reminder Updated & Completed!');
+        showToast('✅ Reminder Completed!');
         renderRemindersPage();
       });
     }

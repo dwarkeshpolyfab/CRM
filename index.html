@@ -15,7 +15,7 @@
     Loading live time...
   </div>
 
-  <!-- Center Brand Hero Header (Matching dwarkeshpolyfab.com) -->
+  <!-- Center Brand Hero Header (Official dwarkeshpolyfab.com Theme) -->
   <div class="brand-hero-header">
     <img src="assets/logo.png" alt="Dwarkesh Polyfab Logo" class="brand-center-logo" />
     <h1 class="brand-center-title">DWARKESH POLYFAB</h1>
@@ -29,7 +29,6 @@
       <!-- 1. New Arrival (from Gmail) -->
       <a class="kpi-box box-new-arrival fade-in" href="pages/data.html?view=new_arrival">
         <div class="kpi-top">
-          <span class="kpi-icon">🆕</span>
           <span class="kpi-count" id="count-new-arrival">0</span>
         </div>
         <div class="kpi-title">New Arrival</div>
@@ -39,7 +38,6 @@
       <!-- 2. Today's Reminder -->
       <a class="kpi-box box-today-reminder fade-in" href="pages/reminders.html?tab=today">
         <div class="kpi-top">
-          <span class="kpi-icon">📅</span>
           <span class="kpi-count" id="count-today-reminder">0</span>
         </div>
         <div class="kpi-title">Today's Reminder</div>
@@ -49,7 +47,6 @@
       <!-- 3. Missed Reminder -->
       <a class="kpi-box box-missed-reminder fade-in" href="pages/reminders.html?tab=missed">
         <div class="kpi-top">
-          <span class="kpi-icon">⚠️</span>
           <span class="kpi-count" id="count-missed-reminder">0</span>
         </div>
         <div class="kpi-title">Missed Reminder</div>
@@ -61,10 +58,12 @@
     <div class="home-actions-list">
       <a class="main-action-card card-all-data fade-in" href="pages/data.html">
         <div class="mac-left">
-          <span class="mac-icon">📊</span>
+          <div class="mac-icon-box">
+            <svg viewBox="0 0 24 24"><path d="M4 9h4v11H4zm6-5h4v16h-4zm6 8h4v8h-4z"/></svg>
+          </div>
           <div>
             <div class="mac-title">All Data</div>
-            <div class="mac-sub">Ranked ⭐⭐⭐⭐⭐ High to Low Stars</div>
+            <div class="mac-sub">Ranked: High to Low Stars</div>
           </div>
         </div>
         <div class="mac-badge" id="count-all-data">0</div>
@@ -72,21 +71,23 @@
 
       <a class="main-action-card card-add fade-in" href="pages/add.html">
         <div class="mac-left">
-          <span class="mac-icon">➕</span>
+          <div class="mac-icon-box">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </div>
           <div>
             <div class="mac-title">Add New Contact</div>
             <div class="mac-sub">Direct input with Place & Stars</div>
           </div>
         </div>
-        <span class="mac-arrow">➔</span>
+        <span class="mac-arrow">&#8594;</span>
       </a>
     </div>
 
     <!-- Backup Controls -->
     <div class="backup-bar">
-      <button class="btn btn-outline btn-sm" onclick="exportBackup()">📥 Export Backup</button>
+      <button class="btn btn-outline btn-sm" onclick="exportBackup()">Export Backup</button>
       <label class="btn btn-outline btn-sm" style="cursor:pointer;">
-        📤 Import Backup
+        Import Backup
         <input type="file" accept=".json" style="display:none" onchange="importBackup(this.files[0])" />
       </label>
     </div>

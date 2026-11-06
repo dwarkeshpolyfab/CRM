@@ -1,6 +1,5 @@
-/* ===== Dwarkesh Polyfab CRM - Smart App Core (app.js) ===== */
+/* ===== Dwarkesh Polyfab Smart CRM - app.js ===== */
 
-// ── Firebase Config ──
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCvUABuMqhfs1SpZMdWKQve0418KdmVg38",
   authDomain: "dwarkesh-crm.firebaseapp.com",
@@ -12,13 +11,12 @@ const FIREBASE_CONFIG = {
   measurementId: "G-0MJE1KLNQP"
 };
 
-// ── Init Firebase ──
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
   firebase.initializeApp(FIREBASE_CONFIG);
 }
 const _fireDB = (typeof firebase !== 'undefined') ? firebase.database() : null;
 
-// ── Place / State Options (Searchable) ──
+// Searchable Place options
 const PLACE_OPTIONS = [
   "Gujarat", "Maharashtra", "Rajasthan", "Madhya Pradesh", "Uttar Pradesh",
   "Delhi", "Punjab", "Haryana", "Karnataka", "Tamil Nadu", "Andhra Pradesh",
@@ -27,11 +25,10 @@ const PLACE_OPTIONS = [
   "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Arunachal Pradesh", "Sikkim",
   "Jammu and Kashmir", "Ladakh", "Chandigarh", "Puducherry",
   "Dadra and Nagar Haveli and Daman and Diu", "Lakshadweep", "Andaman and Nicobar Islands",
-  "India", // Unknown state in India
-  "Export" // International inquiry (requires country)
+  "India",
+  "Export"
 ];
 
-// ── Product Options ──
 const PRODUCT_OPTIONS = [
   { value: "pp_bag",          label: "PP Bag" },
   { value: "bopp_bag",        label: "BOPP Bag" },
@@ -46,15 +43,13 @@ const PRODUCT_OPTIONS = [
   { value: "other",           label: "Other" }
 ];
 
-// ── Rating Options ──
 const RATING_OPTIONS = [
-  { value: "5star",         label: "⭐⭐⭐⭐⭐ (5 Star)",   rank: 50, stars: "⭐⭐⭐⭐⭐" },
-  { value: "4star",         label: "⭐⭐⭐⭐ (4 Star)",     rank: 40, stars: "⭐⭐⭐⭐" },
-  { value: "3star",         label: "⭐⭐⭐ (3 Star)",       rank: 30, stars: "⭐⭐⭐" },
-  { value: "not_important", label: "⚪ Not Important",    rank: 10, stars: "Not Important" }
+  { value: "5star",         label: "★★★★★ (5 Star)",   rank: 50, stars: "★★★★★" },
+  { value: "4star",         label: "★★★★ (4 Star)",     rank: 40, stars: "★★★★" },
+  { value: "3star",         label: "★★★ (3 Star)",       rank: 30, stars: "★★★" },
+  { value: "not_important", label: "Not Important",       rank: 10, stars: "Not Important" }
 ];
 
-// ── Helpers ──
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
 }
@@ -80,15 +75,14 @@ function getRatingRank(rating) {
 
 function getRatingStars(rating) {
   switch (rating) {
-    case '5star': return '⭐⭐⭐⭐⭐';
-    case '4star': return '⭐⭐⭐⭐';
-    case '3star': return '⭐⭐⭐';
-    case 'not_important': return '<span style="color:#94a3b8;font-size:0.8rem;">⚪ Not Important</span>';
-    default: return '<span style="color:#f59e0b;font-size:0.8rem;">⚡ Unrated</span>';
+    case '5star': return '<span class="star-rating">★★★★★</span>';
+    case '4star': return '<span class="star-rating">★★★★</span>';
+    case '3star': return '<span class="star-rating">★★★</span>';
+    case 'not_important': return '<span class="star-not-important">Not Important</span>';
+    default: return '<span class="star-unrated">Unrated</span>';
   }
 }
 
-// ── Direct WhatsApp & Call (NO Pre-filled Text) ──
 function openWhatsApp(phone) {
   const clean = cleanPhone(phone);
   if (!clean) { showToast('No phone number'); return; }
@@ -101,7 +95,6 @@ function callPhone(phone) {
   window.location.href = 'tel:+' + clean;
 }
 
-// ── Live Header Clock ──
 function initLiveClock(elementId) {
   function update() {
     const el = document.getElementById(elementId);
@@ -109,13 +102,12 @@ function initLiveClock(elementId) {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
     const dateStr = now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
-    el.innerHTML = '<span class="clock-time">' + timeStr + '</span> • <span class="clock-date">' + dateStr + '</span>';
+    el.innerHTML = '<span class="clock-time">' + timeStr + '</span> &bull; <span class="clock-date">' + dateStr + '</span>';
   }
   update();
   setInterval(update, 1000);
 }
 
-// ── Toast Notification ──
 function showToast(msg) {
   let t = document.getElementById('app-toast');
   if (!t) {
@@ -129,7 +121,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── In-memory Cache & Live Sync ──
 let _companiesCache = {};
 let _remindersCache = {};
 let _dataListeners = [];
@@ -168,7 +159,6 @@ function notifyListeners() {
   });
 }
 
-// ── Data Accessors ──
 function getAllCompanies() {
   return Object.values(_companiesCache);
 }
@@ -201,13 +191,11 @@ function getTodayDateStr() {
   return `${y}-${m}-${day}`;
 }
 
-// Today's active reminders
 function getTodayReminders() {
   const today = getTodayDateStr();
   return getAllReminders().filter(r => r.date === today && !r.completed);
 }
 
-// Missed: dates strictly before today, not yet completed
 function getMissedReminders() {
   const today = getTodayDateStr();
   return getAllReminders().filter(r => r.date < today && !r.completed);
@@ -218,7 +206,6 @@ function getUpcomingReminders() {
   return getAllReminders().filter(r => r.date > today && !r.completed);
 }
 
-// ── CRUD Operations ──
 function saveCompany(company) {
   if (!company.id) company.id = genId();
   company.updatedAt = new Date().toISOString();
@@ -282,18 +269,15 @@ function deleteReminder(id) {
   return Promise.resolve();
 }
 
-// ── Sort & Filter Companies (Default: High Star to Low Star) ──
 function filterCompanies(filters = {}) {
   let list = getAllCompanies();
 
-  // If new_arrival filter
   if (filters.onlyNewArrival) {
     list = list.filter(c => c.segment === 'new_arrival');
   } else if (filters.hideNewArrival) {
     list = list.filter(c => c.segment !== 'new_arrival');
   }
 
-  // Text search
   if (filters.search) {
     const q = filters.search.toLowerCase().trim();
     list = list.filter(c =>
@@ -305,22 +289,19 @@ function filterCompanies(filters = {}) {
     );
   }
 
-  // Star Rating filter
   if (filters.rating && filters.rating !== 'all') {
     list = list.filter(c => c.rating === filters.rating);
   }
 
-  // Place filter (State / India / Export)
   if (filters.place && filters.place !== 'all') {
     list = list.filter(c => (c.state || '').toLowerCase() === filters.place.toLowerCase());
   }
 
-  // Product filter
   if (filters.product && filters.product !== 'all') {
     list = list.filter(c => c.products && c.products.includes(filters.product));
   }
 
-  // SORT: High Star (50) down to Low Star (10), unrated (0), then newest first
+  // Sort: High Star to Low Star
   list.sort((a, b) => {
     const rankDiff = getRatingRank(b.rating) - getRatingRank(a.rating);
     if (rankDiff !== 0) return rankDiff;
@@ -330,7 +311,6 @@ function filterCompanies(filters = {}) {
   return list;
 }
 
-// ── Smart Datalist Builder for Place (Type 'Gu' -> 'Gujarat') ──
 function renderPlaceDatalist(datalistId) {
   let dl = document.getElementById(datalistId);
   if (!dl) {
@@ -341,7 +321,6 @@ function renderPlaceDatalist(datalistId) {
   dl.innerHTML = PLACE_OPTIONS.map(p => `<option value="${p}"></option>`).join('');
 }
 
-// ── Card Rendering ──
 function buildProductTags(products) {
   if (!products || !products.length) return '';
   return products.map(p => `<span class="tag">${getProductLabel(p)}</span>`).join('');
@@ -352,31 +331,31 @@ function buildCompanyCard(c, opts = {}) {
   const linkTo = opts.linkTo !== false;
   const isSubpage = window.location.pathname.includes('/pages/');
   const basePath = opts.basePath !== undefined ? opts.basePath : (isSubpage ? '' : 'pages/');
+  const targetUrl = opts.customUrl ? opts.customUrl : `${basePath}company.html?id=${c.id}`;
 
   const placeDisplay = c.state === 'Export'
-    ? ('✈️ Export (' + (c.country || 'International') + ')')
-    : (c.state ? ('📍 ' + c.state + (c.city ? ', ' + c.city : '')) : (c.city ? '📍 ' + c.city : ''));
+    ? ('Export (' + (c.country || 'International') + ')')
+    : (c.state ? (c.state + (c.city ? ', ' + c.city : '')) : (c.city || ''));
 
-  const targetUrl = opts.customUrl ? opts.customUrl : `${basePath}company.html?id=${c.id}`;
   let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${targetUrl}'"` : ''}>`;
   html += `<div class="cc-top">`;
   html += `<div class="cc-name">${escHtml(c.name || 'Unnamed')}</div>`;
   html += `<div class="cc-rating">${getRatingStars(c.rating)}</div>`;
   html += `</div>`;
   html += `<div class="cc-meta">`;
-  if (c.phone) html += `<span>📞 ${escHtml(c.phone)}</span>`;
-  if (placeDisplay) html += `<span>${escHtml(placeDisplay)}</span>`;
+  if (c.phone) html += `<span class="meta-item"><span class="meta-icon">&#9742;</span> ${escHtml(c.phone)}</span>`;
+  if (placeDisplay) html += `<span class="meta-item"><span class="meta-icon">&#9873;</span> ${escHtml(placeDisplay)}</span>`;
   html += `</div>`;
-  
+
   if (c.products && c.products.length) {
     html += `<div class="cc-tags">${buildProductTags(c.products)}</div>`;
   }
 
   html += `<div class="action-row" onclick="event.stopPropagation()">`;
-  html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">💬 WhatsApp</button>`;
-  html += `<button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>`;
+  html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">WhatsApp</button>`;
+  html += `<button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(c.phone)}')">Call</button>`;
   if (showDelete) {
-    html += `<button class="btn btn-red btn-sm" onclick="confirmDelete('${c.id}','${escAttr(c.name)}')">🗑️</button>`;
+    html += `<button class="btn btn-red btn-sm" onclick="confirmDelete('${c.id}','${escAttr(c.name)}')">Delete</button>`;
   }
   html += `</div>`;
   html += `</div>`;
@@ -392,7 +371,6 @@ function escAttr(s) {
   return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
-// ── Delete Confirm ──
 let _deleteModal = null;
 function confirmDelete(id, name) {
   if (!_deleteModal) {
@@ -423,7 +401,7 @@ function closeDeleteModal() {
   if (_deleteModal) _deleteModal.classList.remove('open');
 }
 
-// ── Bottom Nav ──
+// Bottom Navigation with Clean Corporate Icons (No Cartoon Emojis)
 function renderBottomNav(activePage) {
   const isSubpage = window.location.pathname.includes('/pages/');
   const prefix = isSubpage ? '../' : '';
@@ -431,20 +409,23 @@ function renderBottomNav(activePage) {
   if (!nav) return;
   nav.innerHTML = `
     <a href="${prefix}index.html" class="${activePage==='home'?'active':''}">
-      <span class="nav-icon">🏠</span>Home
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Home
     </a>
     <a href="${prefix}pages/add.html" class="${activePage==='add'?'active':''}">
-      <span class="nav-icon">➕</span>Add
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Add
     </a>
     <a href="${prefix}pages/data.html" class="${activePage==='data'?'active':''}">
-      <span class="nav-icon">📊</span>All Data
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 9h4v11H4zm6-5h4v16h-4zm6 8h4v8h-4z"/></svg>
+      All Data
     </a>
     <a href="${prefix}pages/reminders.html" class="${activePage==='reminders'?'active':''}">
-      <span class="nav-icon">⏰</span>Reminders
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      Reminders
     </a>`;
 }
 
-// ── Service Worker ──
 function registerSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => {
@@ -453,7 +434,6 @@ function registerSW() {
   }
 }
 
-// ── Init on DOM ready ──
 document.addEventListener('DOMContentLoaded', () => {
   initLiveListener();
   registerSW();
