@@ -3,9 +3,9 @@
 //  Handles background notifications for reminders
 // ============================================================
 
-const CACHE_NAME = 'dp-crm-v7';
+const CACHE_NAME = 'dp-crm-v8';
 
-// Ã°Å¸â€œÂ¦ Cache app files for offline use Ã°Å¸â€œÂ¦
+// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Cache app files for offline use ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll([
@@ -24,7 +24,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Ã°Å¸Â§Â¹ DELETE ALL OLD CACHES on activate Ã°Å¸Â§Â¹
+// ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â¹ DELETE ALL OLD CACHES on activate ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â¹
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -40,7 +40,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Ã°Å¸â€œÂ£ Show notification (called from app via postMessage) Ã°Å¸â€œÂ£
+// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â£ Show notification (called from app via postMessage) ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â£
 self.addEventListener('message', event => {
   if (!event.data) return;
 
@@ -57,8 +57,8 @@ self.addEventListener('message', event => {
         requireInteraction: true,  // stays on screen until user taps
         data:             { reminderId, companyId },
         actions: [
-          { action: 'open',    title: 'Ã°Å¸â€œâ€¹ Open Reminder' },
-          { action: 'dismiss', title: 'Ã¢Å“â€¢ Dismiss'        },
+          { action: 'open',    title: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Open Reminder' },
+          { action: 'dismiss', title: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¢ Dismiss'        },
         ]
       })
     );
@@ -70,7 +70,7 @@ self.addEventListener('message', event => {
   }
 });
 
-// Ã°Å¸â€œÂ² Handle notification tap Ã°Å¸â€œÂ²
+// ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â² Handle notification tap ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -94,7 +94,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Ã°Å¸Å’Â Network first, then cache (always fetch fresh content) Ã°Å¸Å’Â
+// ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â Network first, then cache (always fetch fresh content) ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â
 self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;

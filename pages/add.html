@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Add Contact — Dwarkesh CRM</title>
+  <title>Add Contact â€” Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
   <meta name="theme-color" content="#0f172a" />
 </head>
@@ -11,7 +11,7 @@
 
   <!-- Header -->
   <div class="app-header">
-    <a href="../index.html" class="back-btn" title="Back to Home">‹</a>
+    <a href="../index.html" class="back-btn" title="Back to Home">â€¹</a>
     <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
     <div class="brand-info">
       <h1 class="brand-title">ADD NEW CONTACT</h1>
@@ -37,10 +37,10 @@
         <!-- Quick Call & WhatsApp while adding -->
         <div class="action-row" style="margin-top: 10px;">
           <button type="button" class="btn btn-green btn-sm" onclick="openWhatsApp(document.getElementById('inp-phone').value)">
-            💬 WhatsApp
+            ðŸ’¬ WhatsApp
           </button>
           <button type="button" class="btn btn-primary btn-sm" onclick="callPhone(document.getElementById('inp-phone').value)">
-            📞 Call
+            ðŸ“ž Call
           </button>
         </div>
       </div>
@@ -74,7 +74,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="5star" required />
             <div class="r-body">
-              <span class="r-stars">⭐⭐⭐⭐⭐</span>
+              <span class="r-stars">â­â­â­â­â­</span>
               <span class="r-label">5 Star (Top Lead)</span>
             </div>
           </label>
@@ -82,7 +82,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="4star" />
             <div class="r-body">
-              <span class="r-stars">⭐⭐⭐⭐</span>
+              <span class="r-stars">â­â­â­â­</span>
               <span class="r-label">4 Star (Good Lead)</span>
             </div>
           </label>
@@ -90,7 +90,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="3star" />
             <div class="r-body">
-              <span class="r-stars">⭐⭐⭐</span>
+              <span class="r-stars">â­â­â­</span>
               <span class="r-label">3 Star (Follow-up)</span>
             </div>
           </label>
@@ -98,7 +98,7 @@
           <label class="rating-radio-card">
             <input type="radio" name="inp-rating" value="not_important" />
             <div class="r-body">
-              <span class="r-stars">⚪</span>
+              <span class="r-stars">âšª</span>
               <span class="r-label">Not Important</span>
             </div>
           </label>
@@ -128,8 +128,8 @@
       </div>
 
       <!-- Save Button -->
-      <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-save" style="margin-bottom:30px;">
-        💾 Save Contact
+      <button type="submit" class="btn-save-prominent" id="btn-save" style="margin-bottom:30px;">
+        ðŸ’¾ Save Contact
       </button>
     </form>
   </div>
@@ -234,7 +234,7 @@
       }).catch(err => {
         alert('Error saving: ' + err.message);
         saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Save Contact';
+        saveBtn.textContent = 'ðŸ’¾ Save Contact';
       });
 
       return false;

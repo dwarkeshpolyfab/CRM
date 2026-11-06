@@ -3,22 +3,22 @@
 //  Version: 2.0 (Fresh Start - Firebase Empty)
 //
 //  HOW IT WORKS:
-//  - initKnownPhones() → reads ALL your CURRENT Google Contacts
+//  - initKnownPhones() â†’ reads ALL your CURRENT Google Contacts
 //    and marks them as "already known" so they are NEVER added
-//  - syncNewContacts()  → runs every 15 min, adds only NEW contacts
+//  - syncNewContacts()  â†’ runs every 15 min, adds only NEW contacts
 //  - New contact = saved AFTER you ran initKnownPhones
 // ============================================================
 
 const FIREBASE_URL = 'https://dwarkesh-crm-default-rtdb.asia-southeast1.firebasedatabase.app';
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  FUNCTION 1: Run this ONCE first
 //  Reads ALL your existing Google Contacts and marks them
 //  so they are NEVER added to CRM (you deleted those already)
 //  Only NEW contacts saved AFTER this run will appear in CRM
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function initKnownPhones() {
-  Logger.log('⏳ Reading ALL your current Google Contacts...');
+  Logger.log('â³ Reading ALL your current Google Contacts...');
 
   var contacts = ContactsApp.getContacts();
   Logger.log('Total contacts in Google: ' + contacts.length);
@@ -37,7 +37,7 @@ function initKnownPhones() {
     count++;
   });
 
-  // Save to Firebase — these phones will NEVER be re-added
+  // Save to Firebase â€” these phones will NEVER be re-added
   var resp = UrlFetchApp.fetch(
     FIREBASE_URL + '/crm_data/synced_phones.json',
     {
@@ -49,20 +49,20 @@ function initKnownPhones() {
   );
 
   if (resp.getResponseCode() === 200) {
-    Logger.log('✅ SUCCESS! Marked ' + count + ' existing contacts as KNOWN.');
+    Logger.log('âœ… SUCCESS! Marked ' + count + ' existing contacts as KNOWN.');
     Logger.log('These contacts will NEVER be added to CRM.');
     Logger.log('Only NEW contacts saved after this moment will appear in CRM as New Arrival.');
   } else {
-    Logger.log('❌ Firebase error: ' + resp.getResponseCode());
+    Logger.log('âŒ Firebase error: ' + resp.getResponseCode());
   }
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  FUNCTION 2: Runs automatically every 15 minutes
 //  Finds NEW contacts and adds them to CRM as "New Arrival"
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function syncNewContacts() {
-  Logger.log('🔄 Sync started: ' + new Date().toLocaleString('en-IN'));
+  Logger.log('ðŸ”„ Sync started: ' + new Date().toLocaleString('en-IN'));
 
   // Get all already-known phones from Firebase
   var knownPhones = getKnownPhones();
@@ -93,7 +93,7 @@ function syncNewContacts() {
     // Skip if already known (old contact)
     if (knownPhones.has(phone10)) { skipped++; return; }
 
-    // ✅ NEW CONTACT! Add to CRM as New Arrival
+    // âœ… NEW CONTACT! Add to CRM as New Arrival
     var cleanedName = cleanName(name);
     var id = 'gc_' + phone10 + '_' + Date.now().toString(36);
 
@@ -108,7 +108,7 @@ function syncNewContacts() {
       segment:      'new_arrival',
       rating:       'not_set',
       products:     [],
-      companyNotes: 'Auto-imported from Google Contacts — ' + new Date().toLocaleDateString('en-IN'),
+      companyNotes: 'Auto-imported from Google Contacts â€” ' + new Date().toLocaleDateString('en-IN'),
       createdAt:    now,
       updatedAt:    now,
       source:       'gmail_contact'
@@ -128,31 +128,31 @@ function syncNewContacts() {
       markPhoneSynced(phone10);
       knownPhones.add(phone10);
       added++;
-      Logger.log('🆕 Added: ' + cleanedName + ' (' + phone10 + ')');
+      Logger.log('ðŸ†• Added: ' + cleanedName + ' (' + phone10 + ')');
     } else {
-      Logger.log('⚠️ Failed to add: ' + cleanedName);
+      Logger.log('âš ï¸ Failed to add: ' + cleanedName);
     }
 
     Utilities.sleep(150); // avoid rate limiting
   });
 
-  Logger.log('────────────────────────────');
-  Logger.log('✅ Sync complete!');
+  Logger.log('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
+  Logger.log('âœ… Sync complete!');
   Logger.log('   NEW added:  ' + added);
   Logger.log('   Skipped:    ' + skipped + ' (already known)');
-  Logger.log('────────────────────────────');
+  Logger.log('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  FUNCTION 3: Set up 15-minute auto trigger
-//  Run this ONCE — sync will run automatically forever after
-// ─────────────────────────────────────────────────────────────
+//  Run this ONCE â€” sync will run automatically forever after
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function createAutoTrigger() {
   // Remove old triggers first
   ScriptApp.getProjectTriggers().forEach(function(t) {
     if (t.getHandlerFunction() === 'syncNewContacts') {
       ScriptApp.deleteTrigger(t);
-      Logger.log('🗑️ Deleted old trigger');
+      Logger.log('ðŸ—‘ï¸ Deleted old trigger');
     }
   });
 
@@ -162,14 +162,14 @@ function createAutoTrigger() {
     .everyMinutes(15)
     .create();
 
-  Logger.log('✅ Auto-trigger created!');
+  Logger.log('âœ… Auto-trigger created!');
   Logger.log('syncNewContacts() will now run EVERY 15 MINUTES automatically.');
-  Logger.log('Check the ⏰ Triggers tab (left sidebar) to confirm.');
+  Logger.log('Check the â° Triggers tab (left sidebar) to confirm.');
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  HELPER FUNCTIONS
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getKnownPhones() {
   var resp = UrlFetchApp.fetch(

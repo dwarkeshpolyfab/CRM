@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Contact Details — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#112a46" />
 </head>
 <body>
 
   <!-- Header -->
   <div class="app-header">
-    <a href="data.html" class="back-btn" title="Back">‹</a>
+    <a href="javascript:history.back()" class="back-btn" title="Back">‹</a>
     <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
     <div class="brand-info">
       <h1 class="brand-title" id="page-title">CONTACT DETAILS</h1>
@@ -36,15 +36,22 @@
   <script>
     let currentId = null;
     let editMode = false;
+    let isFromNewArrival = false;
 
     function getIdFromUrl() {
       const p = new URLSearchParams(window.location.search);
       return p.get('id');
     }
 
-    function shouldAutoEdit() {
+    function checkSource() {
       const p = new URLSearchParams(window.location.search);
-      return p.get('autoEdit') === '1' || p.get('edit') === '1';
+      isFromNewArrival = (p.get('autoEdit') === '1' || p.get('from') === 'new_arrival' || document.referrer.includes('new_arrival'));
+    }
+
+    function cleanNoteText(note) {
+      if (!note) return '';
+      if (note.includes('Auto-imported from Google')) return '';
+      return note.trim();
     }
 
     function renderView(c) {
@@ -59,7 +66,7 @@
 
       document.getElementById('page-title').textContent = c.name || 'Contact Details';
 
-      const isNewArrival = (c.segment === 'new_arrival');
+      const isNew = (c.segment === 'new_arrival');
       const products = (c.products || []).map(p => `<span class="tag">${getProductLabel(p)}</span>`).join(' ');
       const otherProd = c.otherProduct ? `<span class="tag tag-other">${escHtml(c.otherProduct)}</span>` : '';
 
@@ -67,12 +74,14 @@
         ? ('✈️ Export (' + (c.country || 'International') + ')')
         : (c.state ? ('📍 ' + c.state + (c.city ? ', ' + c.city : '')) : (c.city ? '📍 ' + c.city : 'Not set'));
 
+      const cleanNote = cleanNoteText(c.companyNotes);
+
       document.getElementById('company-view').innerHTML = `
-        ${isNewArrival ? `
+        ${isNew ? `
         <div class="alert-box-new-arrival fade-in">
           <div class="ab-title">🆕 New Arrival from Gmail</div>
           <p class="ab-text">This contact has not been categorized yet. Set Star Rating ⭐, Place 📍 & Products 📦 to organize it.</p>
-          <button class="btn btn-primary btn-block" onclick="toggleEdit(true)">⚡ Categorize & Segment Contact Now</button>
+          <button class="btn btn-primary btn-block btn-lg" onclick="toggleEdit(true)">⚡ Categorize & Segment Contact Now</button>
         </div>` : ''}
 
         <div class="detail-header-card fade-in">
@@ -102,11 +111,11 @@
           </div>
         </div>
 
-        <!-- Notes / Inquiry Details -->
-        ${c.companyNotes ? `
+        <!-- Notes / Inquiry Details (Auto-imported text removed) -->
+        ${cleanNote ? `
         <div class="detail-section fade-in">
           <h3>📝 Inquiry Notes</h3>
-          <p class="notes-content">${escHtml(c.companyNotes)}</p>
+          <p class="notes-content">${escHtml(cleanNote)}</p>
         </div>` : ''}
 
         <!-- Edit & Delete Buttons -->
@@ -153,12 +162,13 @@
       `).join('');
 
       const isExport = (c.state || '').toLowerCase() === 'export';
+      const cleanNote = cleanNoteText(c.companyNotes);
 
       document.getElementById('company-edit').innerHTML = `
         <form onsubmit="return handleSaveEdit(event)" class="fade-in">
           <div class="form-card">
-            <h3>⚡ Segment & Edit Contact</h3>
-            <div class="form-group">
+            <h3>⚡ Segment & Classify Contact</h3>
+            <div class="form-group" style="margin-top:12px;">
               <label>Name <span class="required">*</span></label>
               <input type="text" class="form-control" id="e-name" value="${escHtml(c.name)}" required />
             </div>
@@ -171,7 +181,7 @@
 
           <div class="form-card">
             <div class="form-group">
-              <label>Place <span class="required">*</span> <small style="color:var(--text-muted);">(Type "Gu" for Gujarat, "India" for other, or "Export")</small></label>
+              <label>Place <span class="required">*</span> <small style="color:var(--text-muted);">(Type "Gu" for Gujarat, "India", or "Export")</small></label>
               <input type="text" class="form-control" id="e-place" list="edit-place-list" value="${escHtml(c.state || '')}" placeholder="Type place (Gujarat, Maharashtra, India, Export...)" required oninput="handleEditPlaceChange(this.value)" />
               <datalist id="edit-place-list"></datalist>
             </div>
@@ -188,7 +198,7 @@
           </div>
 
           <div class="form-card">
-            <label style="font-weight:700;margin-bottom:8px;display:block;">
+            <label style="font-weight:800;color:var(--gold-light);margin-bottom:8px;display:block;">
               Rating Priority <span class="required">*</span>
             </label>
             <div class="rating-picker">
@@ -197,7 +207,7 @@
           </div>
 
           <div class="form-card">
-            <label style="font-weight:700;margin-bottom:8px;display:block;">
+            <label style="font-weight:800;color:var(--gold-light);margin-bottom:8px;display:block;">
               Product Requirements
             </label>
             <div class="product-grid">${productChecks}</div>
@@ -210,14 +220,17 @@
 
           <div class="form-card">
             <div class="form-group">
-              <label>Inquiry Notes</label>
-              <textarea class="form-control" id="e-notes" rows="3" placeholder="Notes...">${escHtml(c.companyNotes || '')}</textarea>
+              <label>Inquiry Notes <small style="color:var(--text-muted);">(Optional)</small></label>
+              <textarea class="form-control" id="e-notes" rows="3" placeholder="Add specific inquiry notes here...">${escHtml(cleanNote)}</textarea>
             </div>
           </div>
 
-          <div class="action-row" style="margin-bottom:30px;">
-            <button type="button" class="btn btn-outline flex-1" onclick="toggleEdit(false)">Cancel</button>
-            <button type="submit" class="btn btn-primary flex-1">💾 Save Changes</button>
+          <!-- 🌟 BIG PROMINENT SAVE BUTTON 🌟 -->
+          <div style="margin-bottom: 30px;">
+            <button type="submit" class="btn-save-prominent" id="btn-save-edit">
+              💾 Save Changes
+            </button>
+            <button type="button" class="btn btn-outline btn-block" style="margin-top:10px;height:44px;" onclick="toggleEdit(false)">Cancel</button>
           </div>
         </form>
       `;
@@ -252,6 +265,8 @@
       const c = getCompany(currentId);
       if (!c) return false;
 
+      const wasNewArrival = (c.segment === 'new_arrival' || isFromNewArrival);
+
       c.name = document.getElementById('e-name').value.trim();
       c.phone = document.getElementById('e-phone').value.trim();
       c.state = document.getElementById('e-place').value.trim();
@@ -269,16 +284,30 @@
 
       c.products = Array.from(document.querySelectorAll('input[name="e-products"]:checked')).map(el => el.value);
 
-      // Once user fills rating/details, mark as categorized (removes from New Arrivals!)
+      // Categorized! Removes from New Arrivals
       c.segment = 'categorized';
 
+      const saveBtn = document.getElementById('btn-save-edit');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+      }
+
       saveCompany(c).then(() => {
-        showToast('Contact Categorized & Saved!');
-        editMode = false;
-        document.getElementById('company-view').classList.remove('hidden');
-        document.getElementById('company-edit').classList.add('hidden');
-        renderView(c);
-        renderReminders(c);
+        // User Requirement: "WHEN I SAVED THIS DETAIL FROM NEW ARRIVEL THEN BACK THE PAGE OF NEW ARRIVEL PAGE DO IT"
+        if (wasNewArrival) {
+          showToast('✅ Saved! Returning to New Arrivals...');
+          setTimeout(() => {
+            window.location.href = 'data.html?view=new_arrival';
+          }, 400);
+        } else {
+          showToast('✅ Contact Details Updated!');
+          editMode = false;
+          document.getElementById('company-view').classList.remove('hidden');
+          document.getElementById('company-edit').classList.add('hidden');
+          renderView(c);
+          renderReminders(c);
+        }
       });
 
       return false;
@@ -294,7 +323,10 @@
             await deleteCompany(currentId);
             closeDeleteModal();
             showToast('Contact deleted');
-            setTimeout(() => { window.location.href = 'data.html'; }, 300);
+            setTimeout(() => {
+              if (isFromNewArrival) window.location.href = 'data.html?view=new_arrival';
+              else window.location.href = 'data.html';
+            }, 300);
           };
         }
       }, 50);
@@ -342,7 +374,7 @@
       });
 
       if (completed.length > 0) {
-        html += `<div style="margin-top:12px;color:var(--text-muted);font-size:0.8rem;font-weight:600;">Completed (${completed.length})</div>`;
+        html += `<div style="margin-top:12px;color:var(--text-muted);font-size:0.8rem;font-weight:700;">Completed (${completed.length})</div>`;
         completed.forEach(r => {
           html += `<div class="reminder-item-box completed">
             <span style="text-decoration:line-through;color:var(--text-muted);">${escHtml(r.note || 'Reminder')}</span>
@@ -382,6 +414,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderBottomNav('data');
       currentId = getIdFromUrl();
+      checkSource();
 
       if (!currentId) {
         document.getElementById('company-view').innerHTML = `
@@ -401,7 +434,7 @@
       setTimeout(() => {
         const c = getCompany(currentId);
         if (c) {
-          if (shouldAutoEdit() || c.segment === 'new_arrival') {
+          if (isFromNewArrival || c.segment === 'new_arrival') {
             toggleEdit(true);
           } else {
             renderView(c);

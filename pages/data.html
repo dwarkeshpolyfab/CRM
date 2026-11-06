@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>All Data — Dwarkesh CRM</title>
+  <title>All Data â€” Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
   <meta name="theme-color" content="#0f172a" />
 </head>
@@ -11,11 +11,11 @@
 
   <!-- App Header -->
   <div class="app-header">
-    <a href="../index.html" class="back-btn" title="Back to Home">‹</a>
+    <a href="../index.html" class="back-btn" title="Back to Home">â€¹</a>
     <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
     <div class="brand-info">
       <h1 class="brand-title" id="page-heading">ALL DATA</h1>
-      <div class="brand-tagline" id="page-subheading">Sorted: ⭐ High to Low Stars</div>
+      <div class="brand-tagline" id="page-subheading">Sorted: â­ High to Low Stars</div>
     </div>
   </div>
 
@@ -23,16 +23,16 @@
 
     <!-- Top Compact One-Line Bar (Search + Filter Toggle) -->
     <div class="search-filter-row" id="search-filter-bar">
-      <input type="text" class="form-control search-input" id="inp-search" placeholder="🔍 Search name, phone, place..." />
+      <input type="text" class="form-control search-input" id="inp-search" placeholder="ðŸ” Search name, phone, place..." />
       <button class="btn btn-filter" id="btn-toggle-filter" onclick="toggleFilterDrawer()">
-        ⚡ Filters <span class="filter-count-badge hidden" id="active-filter-badge">0</span>
+        âš¡ Filters <span class="filter-count-badge hidden" id="active-filter-badge">0</span>
       </button>
     </div>
 
     <!-- Collapsible Filter Drawer (Hidden by Default) -->
     <div class="filter-drawer hidden" id="filter-drawer">
       <div class="filter-drawer-header">
-        <span>⚡ Filter Companies</span>
+        <span>âš¡ Filter Companies</span>
         <button class="btn-text-sm" onclick="resetFilters()">Reset All</button>
       </div>
 
@@ -41,10 +41,10 @@
         <label class="fg-title">Star Rating</label>
         <div class="chip-row" id="rating-chips">
           <button class="chip active" data-rating="all">All</button>
-          <button class="chip" data-rating="5star">⭐⭐⭐⭐⭐</button>
-          <button class="chip" data-rating="4star">⭐⭐⭐⭐</button>
-          <button class="chip" data-rating="3star">⭐⭐⭐</button>
-          <button class="chip" data-rating="not_important">⚪ Not Important</button>
+          <button class="chip" data-rating="5star">â­â­â­â­â­</button>
+          <button class="chip" data-rating="4star">â­â­â­â­</button>
+          <button class="chip" data-rating="3star">â­â­â­</button>
+          <button class="chip" data-rating="not_important">âšª Not Important</button>
         </div>
       </div>
 
@@ -69,7 +69,7 @@
     <!-- Active Filter Summary & Result Count -->
     <div class="result-count-bar">
       <span id="results-count">Loading contacts...</span>
-      <span class="badge-sort">⭐ High to Low</span>
+      <span class="badge-sort">â­ High to Low</span>
     </div>
 
     <!-- Company List Container -->
@@ -168,7 +168,7 @@
       if (list.length === 0) {
         listEl.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">${isNewArrivalView ? '🎉' : '🔍'}</div>
+            <div class="empty-icon">${isNewArrivalView ? 'ðŸŽ‰' : 'ðŸ”'}</div>
             <p>${isNewArrivalView ? 'No pending New Arrivals! All contacts are categorized.' : 'No contacts match your search or filters.'}</p>
           </div>`;
         return;
@@ -176,7 +176,7 @@
 
       // Render cards: In New Arrival view, clicking takes directly to edit/segment mode!
       listEl.innerHTML = list.map(c => {
-        const targetUrl = isNewArrivalView ? `company.html?id=${c.id}&autoEdit=1` : `company.html?id=${c.id}`;
+        const targetUrl = isNewArrivalView ? `company.html?id=${c.id}&autoEdit=1&from=new_arrival` : `company.html?id=${c.id}`;
         return buildCompanyCard(c, { basePath: '', linkTo: true, customUrl: targetUrl });
       }).join('');
     }

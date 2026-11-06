@@ -357,7 +357,8 @@ function buildCompanyCard(c, opts = {}) {
     ? ('✈️ Export (' + (c.country || 'International') + ')')
     : (c.state ? ('📍 ' + c.state + (c.city ? ', ' + c.city : '')) : (c.city ? '📍 ' + c.city : ''));
 
-  let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${basePath}company.html?id=${c.id}'"` : ''}>`;
+  const targetUrl = opts.customUrl ? opts.customUrl : `${basePath}company.html?id=${c.id}`;
+  let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${targetUrl}'"` : ''}>`;
   html += `<div class="cc-top">`;
   html += `<div class="cc-name">${escHtml(c.name || 'Unnamed')}</div>`;
   html += `<div class="cc-rating">${getRatingStars(c.rating)}</div>`;
