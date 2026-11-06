@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Company — Dwarkesh CRM</title>
+  <title>Contact Details — Dwarkesh CRM</title>
   <link rel="stylesheet" href="../assets/style.css" />
   <meta name="theme-color" content="#0f172a" />
 </head>
@@ -11,10 +11,11 @@
 
   <!-- Header -->
   <div class="app-header">
-    <img src="../assets/log✅png" alt="Logo" class="logo" />
-    <div>
-      <h1 id="page-title">Company Details</h1>
-      <div class="subtitle">Dwarkesh Polyfab CRM</div>
+    <a href="data.html" class="back-btn" title="Back">‹</a>
+    <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
+    <div class="brand-info">
+      <h1 class="brand-title" id="page-title">CONTACT DETAILS</h1>
+      <div class="brand-tagline">Dwarkesh Polyfab CRM</div>
     </div>
   </div>
 
@@ -24,7 +25,7 @@
     <div id="reminder-section"></div>
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Firebase SDK -->
@@ -37,95 +38,89 @@
     let editMode = false;
 
     function getIdFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('id');
+      const p = new URLSearchParams(window.location.search);
+      return p.get('id');
+    }
+
+    function shouldAutoEdit() {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('autoEdit') === '1' || p.get('edit') === '1';
     }
 
     function renderView(c) {
       if (!c) {
         document.getElementById('company-view').innerHTML = `
-        ${(!c.rating || c.rating === 'not_set' || c.segment === 'new_arrival') ? `
-        <div class="card" style="background: rgba(245, 158, 11, 0.15); border: 1px solid var(--orange); margin-bottom: 16px; padding: 14px; border-radius: 10px;">
-          <div style="font-weight: 700; color: var(--orange); font-size: 1rem; margin-bottom: 4px;">🆕 New Arrival — Details Needed</div>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">This contact was saved from Gmail. Set their Star Rating ⭐, State 📍, and Products 📦 to organize your CRM.</p>
-          <button class="btn btn-primary" onclick="toggleEdit()" style="width: 100%; font-weight: 700;">⚡ Set Rating, State & Products Now</button>
-        </div>` : ''}
-
           <div class="empty-state">
-            <div class="empty-icon">❌</div>
-            <p>Company not found</p>
+            <div class="empty-icon">🔍</div>
+            <p>Contact not found</p>
           </div>`;
         return;
       }
 
-      document.getElementById('page-title').textContent = c.name || 'Company';
+      document.getElementById('page-title').textContent = c.name || 'Contact Details';
 
+      const isNewArrival = (c.segment === 'new_arrival');
       const products = (c.products || []).map(p => `<span class="tag">${getProductLabel(p)}</span>`).join(' ');
-      const otherProd = c.otherProduct ? `<span class="tag" style="background:var(--orange-bg);color:var(--orange);">${escHtml(c.otherProduct)}</span>` : '';
+      const otherProd = c.otherProduct ? `<span class="tag tag-other">${escHtml(c.otherProduct)}</span>` : '';
+
+      const placeDisplay = c.state === 'Export'
+        ? ('✈️ Export (' + (c.country || 'International') + ')')
+        : (c.state ? ('📍 ' + c.state + (c.city ? ', ' + c.city : '')) : (c.city ? '📍 ' + c.city : 'Not set'));
 
       document.getElementById('company-view').innerHTML = `
-        <div class="detail-header">
-          <h2>${escHtml(c.name)}</h2>
-          <div class="detail-phone">${escHtml(c.phone)}</div>
-          <div style="margin-top:8px">${getRatingStars(c.rating)}</div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="fab-actions">
-          <button class="btn btn-green" onclick="openWhatsApp('${escAttr(c.phone)}')">📱 WhatsApp</button>
-          <button class="btn btn-primary" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>
-        </div>
-
-        <!-- Details -->
-        <div class="detail-section">
-          <h3>Company Info</h3>
-          <div class="detail-row">
-            <span class="dr-label">State</span>
-            <span class="dr-value">${escHtml(c.state || '—')}</span>
-          </div>
-          <div class="detail-row">
-            <span class="dr-label">City</span>
-            <span class="dr-value">${escHtml(c.city || '—')}</span>
-          </div>
-          <div class="detail-row">
-            <span class="dr-label">Nature</span>
-            <span class="dr-value">${escHtml(c.nature || '—')}</span>
-          </div>
-          <div class="detail-row">
-            <span class="dr-label">Status</span>
-            <span class="dr-value">${buildStatusBadge(c.status)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="dr-label">Segment</span>
-            <span class="dr-value">${escHtml(c.segment || '—')}</span>
-          </div>
-          <div class="detail-row">
-            <span class="dr-label">Source</span>
-            <span class="dr-value">${escHtml(c.source || '—')}</span>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <h3>Products</h3>
-          <div class="cc-tags">${products} ${otherProd}</div>
-        </div>
-
-        ${c.companyNotes ? `
-        <div class="detail-section">
-          <h3>Notes</h3>
-          <p style="color:var(--text-secondary);font-size:0.9rem;white-space:pre-wrap;">${escHtml(c.companyNotes)}</p>
+        ${isNewArrival ? `
+        <div class="alert-box-new-arrival fade-in">
+          <div class="ab-title">🆕 New Arrival from Gmail</div>
+          <p class="ab-text">This contact has not been categorized yet. Set Star Rating ⭐, Place 📍 & Products 📦 to organize it.</p>
+          <button class="btn btn-primary btn-block" onclick="toggleEdit(true)">⚡ Categorize & Segment Contact Now</button>
         </div>` : ''}
 
-        <!-- Edit / Delete -->
+        <div class="detail-header-card fade-in">
+          <div class="dh-top">
+            <h2 class="dh-name">${escHtml(c.name)}</h2>
+            <div class="dh-rating">${getRatingStars(c.rating)}</div>
+          </div>
+          <div class="dh-phone">📞 ${escHtml(c.phone || 'No phone')}</div>
+          <div class="dh-place">${escHtml(placeDisplay)}</div>
+
+          <!-- Quick Action Buttons -->
+          <div class="action-row" style="margin-top:16px;">
+            <button class="btn btn-green btn-lg flex-1" onclick="openWhatsApp('${escAttr(c.phone)}')">
+              💬 WhatsApp
+            </button>
+            <button class="btn btn-primary btn-lg flex-1" onclick="callPhone('${escAttr(c.phone)}')">
+              📞 Call
+            </button>
+          </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="detail-section fade-in">
+          <h3>📦 Product Requirements</h3>
+          <div class="cc-tags" style="margin-top:8px;">
+            ${(products || otherProd) ? (products + ' ' + otherProd) : '<span style="color:var(--text-muted);font-size:0.85rem;">No products specified yet</span>'}
+          </div>
+        </div>
+
+        <!-- Notes / Inquiry Details -->
+        ${c.companyNotes ? `
+        <div class="detail-section fade-in">
+          <h3>📝 Inquiry Notes</h3>
+          <p class="notes-content">${escHtml(c.companyNotes)}</p>
+        </div>` : ''}
+
+        <!-- Edit & Delete Buttons -->
         <div class="action-row" style="margin-top:16px;">
-          <button class="btn btn-primary" style="flex:1" onclick="toggleEdit()">✏️ Edit</button>
-          <button class="btn btn-red" style="flex:1" onclick="handleDelete()">🗑️ Delete</button>
+          <button class="btn btn-outline flex-1" onclick="toggleEdit(true)">✏️ Edit / Categorize</button>
+          <button class="btn btn-red flex-1" onclick="handleDelete()">🗑️ Delete</button>
         </div>
       `;
     }
 
-    function toggleEdit() {
-      editMode = !editMode;
+    function toggleEdit(forceOpen) {
+      if (forceOpen !== undefined) editMode = forceOpen;
+      else editMode = !editMode;
+
       if (editMode) {
         renderEditForm();
         document.getElementById('company-view').classList.add('hidden');
@@ -140,79 +135,116 @@
       const c = getCompany(currentId);
       if (!c) return;
 
-      const ratingRadios = RATING_OPTIONS.map(r =>
-        `<label><input type="radio" name="e-rating" value="${r.value}" ${c.rating === r.value ? 'checked' : ''} /> ${r.label}</label>`
-      ).join('');
+      const ratingRadios = RATING_OPTIONS.map(r => `
+        <label class="rating-radio-card sm">
+          <input type="radio" name="e-rating" value="${r.value}" ${c.rating === r.value ? 'checked' : ''} />
+          <div class="r-body">
+            <span class="r-stars">${r.stars}</span>
+            <span class="r-label">${r.label}</span>
+          </div>
+        </label>
+      `).join('');
 
-      const productChecks = PRODUCT_OPTIONS.map(p =>
-        `<label><input type="checkbox" name="e-products" value="${p.value}" ${(c.products||[]).includes(p.value) ? 'checked' : ''} /> ${p.label}</label>`
-      ).join('');
+      const productChecks = PRODUCT_OPTIONS.map(p => `
+        <label class="product-check-label">
+          <input type="checkbox" name="e-products" value="${p.value}" ${(c.products||[]).includes(p.value) ? 'checked' : ''} onchange="toggleEditOther(this)" />
+          <span>${p.label}</span>
+        </label>
+      `).join('');
 
-      const statusOpts = STATUS_OPTIONS.map(s =>
-        `<option value="${s}" ${c.status === s ? 'selected' : ''}>${s}</option>`
-      ).join('');
-
-      const segmentOpts = SEGMENT_OPTIONS.map(s =>
-        `<option value="${s.value}" ${c.segment === s.value ? 'selected' : ''}>${s.label}</option>`
-      ).join('');
-
-      const natureOpts = ['','Manufacturer','Trader','Exporter'].map(n =>
-        `<option value="${n}" ${c.nature === n ? 'selected' : ''}>${n || 'Select Nature'}</option>`
-      ).join('');
+      const isExport = (c.state || '').toLowerCase() === 'export';
 
       document.getElementById('company-edit').innerHTML = `
-        <form onsubmit="return handleSaveEdit(event)">
-          <div class="form-group">
-            <label>Name <span class="required">*</span></label>
-            <input type="text" class="form-control" id="e-name" value="${escHtml(c.name)}" required />
-          </div>
-          <div class="form-group">
-            <label>Phone <span class="required">*</span></label>
-            <input type="tel" class="form-control" id="e-phone" value="${escHtml(c.phone)}" required />
-          </div>
-          <div class="form-group">
-            <label>State</label>
-            <select class="form-control" id="e-state"></select>
-          </div>
-          <div class="form-group">
-            <label>City</label>
-            <input type="text" class="form-control" id="e-city" value="${escHtml(c.city || '')}" />
-          </div>
-          <div class="form-group">
-            <label>Nature</label>
-            <select class="form-control" id="e-nature">${natureOpts}</select>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select class="form-control" id="e-status">${statusOpts}</select>
-          </div>
-          <div class="form-group">
-            <label>Segment</label>
-            <select class="form-control" id="e-segment">${segmentOpts}</select>
-          </div>
-          <div class="form-group">
-            <label>Rating</label>
-            <div class="radio-group">${ratingRadios}</div>
-          </div>
-          <div class="form-group">
-            <label>Products</label>
-            <div class="checkbox-group">${productChecks}</div>
-            <div style="margin-top:10px;">
-              <input type="text" class="form-control" id="e-other-product" value="${escHtml(c.otherProduct || '')}" placeholder="Other product (if selected)" />
+        <form onsubmit="return handleSaveEdit(event)" class="fade-in">
+          <div class="form-card">
+            <h3>⚡ Segment & Edit Contact</h3>
+            <div class="form-group">
+              <label>Name <span class="required">*</span></label>
+              <input type="text" class="form-control" id="e-name" value="${escHtml(c.name)}" required />
+            </div>
+
+            <div class="form-group">
+              <label>Phone <span class="required">*</span></label>
+              <input type="tel" class="form-control" id="e-phone" value="${escHtml(c.phone)}" required />
             </div>
           </div>
-          <div class="form-group">
-            <label>Notes</label>
-            <textarea class="form-control" id="e-notes">${escHtml(c.companyNotes || '')}</textarea>
+
+          <div class="form-card">
+            <div class="form-group">
+              <label>Place <span class="required">*</span> <small style="color:var(--text-muted);">(Type "Gu" for Gujarat, "India" for other, or "Export")</small></label>
+              <input type="text" class="form-control" id="e-place" list="edit-place-list" value="${escHtml(c.state || '')}" placeholder="Type place (Gujarat, Maharashtra, India, Export...)" required oninput="handleEditPlaceChange(this.value)" />
+              <datalist id="edit-place-list"></datalist>
+            </div>
+
+            <div class="form-group ${isExport ? '' : 'hidden'}" id="e-group-country">
+              <label>Export Country Name <span class="required">*</span></label>
+              <input type="text" class="form-control" id="e-country" value="${escHtml(c.country || '')}" placeholder="e.g. USA, UAE, Kenya..." />
+            </div>
+
+            <div class="form-group">
+              <label>City <small style="color:var(--text-muted);">(Optional)</small></label>
+              <input type="text" class="form-control" id="e-city" value="${escHtml(c.city || '')}" placeholder="City..." />
+            </div>
           </div>
-          <div class="action-row">
-            <button type="submit" class="btn btn-green" style="flex:1">💾 Save</button>
-            <button type="button" class="btn btn-outline" style="flex:1" onclick="toggleEdit()">Cancel</button>
+
+          <div class="form-card">
+            <label style="font-weight:700;margin-bottom:8px;display:block;">
+              Rating Priority <span class="required">*</span>
+            </label>
+            <div class="rating-picker">
+              ${ratingRadios}
+            </div>
+          </div>
+
+          <div class="form-card">
+            <label style="font-weight:700;margin-bottom:8px;display:block;">
+              Product Requirements
+            </label>
+            <div class="product-grid">${productChecks}</div>
+
+            <div class="form-group ${(c.products||[]).includes('other') ? '' : 'hidden'}" id="e-group-other" style="margin-top:10px;">
+              <label>Other Product Requirement Details:</label>
+              <input type="text" class="form-control" id="e-other-product" value="${escHtml(c.otherProduct || '')}" placeholder="Describe specific bag..." />
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-group">
+              <label>Inquiry Notes</label>
+              <textarea class="form-control" id="e-notes" rows="3" placeholder="Notes...">${escHtml(c.companyNotes || '')}</textarea>
+            </div>
+          </div>
+
+          <div class="action-row" style="margin-bottom:30px;">
+            <button type="button" class="btn btn-outline flex-1" onclick="toggleEdit(false)">Cancel</button>
+            <button type="submit" class="btn btn-primary flex-1">💾 Save Changes</button>
           </div>
         </form>
       `;
 
-      populateStateDropdown(document.getElementById('e-state'), c.state || '');
+      renderPlaceDatalist('edit-place-list');
+    }
+
+    function handleEditPlaceChange(val) {
+      const isExport = val.trim().toLowerCase() === 'export';
+      const grp = document.getElementById('e-group-country');
+      const inpCountry = document.getElementById('e-country');
+      if (grp && inpCountry) {
+        if (isExport) {
+          grp.classList.remove('hidden');
+          inpCountry.required = true;
+        } else {
+          grp.classList.add('hidden');
+          inpCountry.required = false;
+        }
+      }
+    }
+
+    function toggleEditOther(el) {
+      if (el.value === 'other') {
+        const grp = document.getElementById('e-group-other');
+        if (grp) grp.classList.toggle('hidden', !el.checked);
+      }
     }
 
     function handleSaveEdit(e) {
@@ -222,21 +254,26 @@
 
       c.name = document.getElementById('e-name').value.trim();
       c.phone = document.getElementById('e-phone').value.trim();
-      c.state = document.getElementById('e-state').value;
+      c.state = document.getElementById('e-place').value.trim();
+      c.country = (c.state.toLowerCase() === 'export') ? document.getElementById('e-country').value.trim() : '';
       c.city = document.getElementById('e-city').value.trim();
-      c.nature = document.getElementById('e-nature').value;
-      c.status = document.getElementById('e-status').value;
-      c.segment = document.getElementById('e-segment').value;
       c.companyNotes = document.getElementById('e-notes').value.trim();
-      c.otherProduct = document.getElementById('e-other-product').value.trim();
+
+      const otherEl = document.getElementById('e-other-product');
+      c.otherProduct = otherEl ? otherEl.value.trim() : '';
 
       const ratingEl = document.querySelector('input[name="e-rating"]:checked');
-      if (ratingEl) c.rating = ratingEl.value;
+      if (ratingEl) {
+        c.rating = ratingEl.value;
+      }
 
       c.products = Array.from(document.querySelectorAll('input[name="e-products"]:checked')).map(el => el.value);
 
+      // Once user fills rating/details, mark as categorized (removes from New Arrivals!)
+      c.segment = 'categorized';
+
       saveCompany(c).then(() => {
-        showToast('Company updated');
+        showToast('Contact Categorized & Saved!');
         editMode = false;
         document.getElementById('company-view').classList.remove('hidden');
         document.getElementById('company-edit').classList.add('hidden');
@@ -250,15 +287,13 @@
     function handleDelete() {
       const c = getCompany(currentId);
       confirmDelete(currentId, c ? c.name : '');
-      // Override the confirm button to also redirect
       setTimeout(() => {
         const btn = document.getElementById('delete-modal-confirm');
         if (btn) {
-          const origClick = btn.onclick;
           btn.onclick = async () => {
             await deleteCompany(currentId);
             closeDeleteModal();
-            showToast('Company deleted');
+            showToast('Contact deleted');
             setTimeout(() => { window.location.href = 'data.html'; }, 300);
           };
         }
@@ -273,38 +308,45 @@
       const completed = reminders.filter(r => r.completed);
 
       let html = `
-        <div class="detail-section" style="margin-top:16px;">
-          <h3>Reminders</h3>
-          <form onsubmit="return addReminder(event)" style="margin-bottom:16px;">
+        <div class="detail-section fade-in" style="margin-top:16px;">
+          <h3>⏰ Reminders & Follow-ups</h3>
+          <form onsubmit="return addReminder(event)" style="margin-top:10px;margin-bottom:14px;">
             <div style="display:flex;gap:8px;">
               <input type="date" class="form-control" id="r-date" required style="flex:1;" />
-              <input type="text" class="form-control" id="r-note" placeholder="Note" style="flex:2;" />
+              <input type="text" class="form-control" id="r-note" placeholder="Reminder note (e.g. Call for rate)..." style="flex:2;" />
             </div>
-            <button type="submit" class="btn btn-primary btn-sm mt-8">Add Reminder</button>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">➕ Set Reminder</button>
           </form>`;
 
       if (active.length === 0 && completed.length === 0) {
-        html += `<p style="color:var(--text-muted);font-size:0.85rem;">No reminders set</p>`;
+        html += `<p style="color:var(--text-muted);font-size:0.85rem;">No reminders active</p>`;
       }
 
       active.forEach(r => {
+        const isPast = (r.date < getTodayDateStr());
         html += `
-          <div class="reminder-card">
-            <div class="rc-note">${escHtml(r.note || 'Reminder')}</div>
-            <div class="rc-date">📅 ${r.date}</div>
-            <div class="rc-actions">
-              <button class="btn btn-green btn-sm" onclick="completeReminder('${r.id}').then(()=>showToast('Done'))">✅ Done</button>
-              <button class="btn btn-red btn-sm" onclick="deleteReminder('${r.id}').then(()=>showToast('Deleted'))">🗑️</button>
+          <div class="reminder-item-box ${isPast ? 'missed-box' : ''}">
+            <div class="rib-top">
+              <span class="rib-note">${escHtml(r.note || 'Follow-up')}</span>
+              <span class="rib-date">${isPast ? '⚠️ Missed: ' : '📅 '} ${r.date}</span>
+            </div>
+            <div class="rib-actions">
+              <button class="btn btn-green btn-sm" onclick="completeReminder('${r.id}').then(()=>{showToast('Reminder Done!'); renderReminders(getCompany(currentId));})">
+                ✅ Done / Updated
+              </button>
+              <button class="btn btn-red btn-sm" onclick="deleteReminder('${r.id}').then(()=>{showToast('Reminder deleted'); renderReminders(getCompany(currentId));})">
+                🗑️
+              </button>
             </div>
           </div>`;
       });
 
       if (completed.length > 0) {
-        html += `<div style="margin-top:12px;color:var(--text-muted);font-size:0.8rem;">Completed (${completed.length})</div>`;
+        html += `<div style="margin-top:12px;color:var(--text-muted);font-size:0.8rem;font-weight:600;">Completed (${completed.length})</div>`;
         completed.forEach(r => {
-          html += `<div class="reminder-card" style="opacity:0.5;">
-            <div class="rc-note" style="text-decoration:line-through;">${escHtml(r.note || 'Reminder')}</div>
-            <div class="rc-date">📅 ${r.date} — ✅ Completed</div>
+          html += `<div class="reminder-item-box completed">
+            <span style="text-decoration:line-through;color:var(--text-muted);">${escHtml(r.note || 'Reminder')}</span>
+            <span style="color:var(--text-muted);font-size:0.75rem;">Completed</span>
           </div>`;
         });
       }
@@ -329,14 +371,14 @@
         note,
         completed: false
       }).then(() => {
-        showToast('Reminder added');
+        showToast('Reminder Added!');
         document.getElementById('r-date').value = '';
         document.getElementById('r-note').value = '';
+        renderReminders(c);
       });
       return false;
     }
 
-    // ── Init ──
     document.addEventListener('DOMContentLoaded', () => {
       renderBottomNav('data');
       currentId = getIdFromUrl();
@@ -344,8 +386,8 @@
       if (!currentId) {
         document.getElementById('company-view').innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">❌</div>
-            <p>No company ID provided</p>
+            <div class="empty-icon">🔍</div>
+            <p>No contact ID provided</p>
           </div>`;
         return;
       }
@@ -358,9 +400,17 @@
 
       setTimeout(() => {
         const c = getCompany(currentId);
-        renderView(c);
-        renderReminders(c);
-      }, 600);
+        if (c) {
+          if (shouldAutoEdit() || c.segment === 'new_arrival') {
+            toggleEdit(true);
+          } else {
+            renderView(c);
+          }
+          renderReminders(c);
+        } else {
+          renderView(null);
+        }
+      }, 400);
     });
   </script>
 </body>

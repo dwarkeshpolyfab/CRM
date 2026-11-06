@@ -1,4 +1,4 @@
-/* ===== Dwarkesh Polyfab CRM v2 — app.js ===== */
+/* ===== Dwarkesh Polyfab CRM - Smart App Core (app.js) ===== */
 
 // ── Firebase Config ──
 const FIREBASE_CONFIG = {
@@ -18,52 +18,40 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
 }
 const _fireDB = (typeof firebase !== 'undefined') ? firebase.database() : null;
 
-// ── All Indian States ──
-const INDIAN_STATES = [
-  "Gujarat","Maharashtra","Rajasthan","Madhya Pradesh","Uttar Pradesh",
-  "Karnataka","Tamil Nadu","Andhra Pradesh","Telangana","Kerala",
-  "West Bengal","Bihar","Odisha","Punjab","Haryana","Chhattisgarh",
-  "Jharkhand","Uttarakhand","Himachal Pradesh","Assam","Goa","Tripura",
-  "Meghalaya","Manipur","Mizoram","Nagaland","Arunachal Pradesh","Sikkim",
-  "Jammu and Kashmir","Ladakh","Delhi","Chandigarh","Puducherry",
-  "Dadra and Nagar Haveli and Daman and Diu","Lakshadweep",
-  "Andaman and Nicobar Islands"
+// ── Place / State Options (Searchable) ──
+const PLACE_OPTIONS = [
+  "Gujarat", "Maharashtra", "Rajasthan", "Madhya Pradesh", "Uttar Pradesh",
+  "Delhi", "Punjab", "Haryana", "Karnataka", "Tamil Nadu", "Andhra Pradesh",
+  "Telangana", "Kerala", "West Bengal", "Bihar", "Odisha", "Chhattisgarh",
+  "Jharkhand", "Uttarakhand", "Himachal Pradesh", "Assam", "Goa", "Tripura",
+  "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Arunachal Pradesh", "Sikkim",
+  "Jammu and Kashmir", "Ladakh", "Chandigarh", "Puducherry",
+  "Dadra and Nagar Haveli and Daman and Diu", "Lakshadweep", "Andaman and Nicobar Islands",
+  "India", // Unknown state in India
+  "Export" // International inquiry (requires country)
 ];
 
 // ── Product Options ──
 const PRODUCT_OPTIONS = [
-  { value: "pp_bag",           label: "PP Bag" },
-  { value: "bopp_bag",         label: "BOPP Bag" },
-  { value: "antislip_bag",     label: "Anti-Slip Bag" },
-  { value: "leno_bag",         label: "Leno Bag" },
-  { value: "fibc_bag",         label: "FIBC Bag" },
-  { value: "multicolour_bag",  label: "Multicolour Bag" },
-  { value: "valve_bag",        label: "Valve Bag" },
-  { value: "sugar_bag",        label: "Sugar Bag" },
-  { value: "ld_liner_bag",     label: "L D Liner Bag" },
-  { value: "rice_bag",         label: "Rice Bag" },
-  { value: "other",            label: "Other" }
+  { value: "pp_bag",          label: "PP Bag" },
+  { value: "bopp_bag",        label: "BOPP Bag" },
+  { value: "antislip_bag",    label: "Anti-Slip Bag" },
+  { value: "leno_bag",        label: "Leno Bag" },
+  { value: "fibc_bag",        label: "FIBC Bag" },
+  { value: "multicolour_bag", label: "Multicolour Bag" },
+  { value: "valve_bag",       label: "Valve Bag" },
+  { value: "sugar_bag",       label: "Sugar Bag" },
+  { value: "ld_liner_bag",    label: "L D Liner Bag" },
+  { value: "rice_bag",        label: "Rice Bag" },
+  { value: "other",           label: "Other" }
 ];
 
 // ── Rating Options ──
 const RATING_OPTIONS = [
-  { value: "not_important", label: "Not Important", stars: "" },
-  { value: "3star",         label: "⭐⭐⭐ (3 Star)",       stars: "⭐⭐⭐" },
-  { value: "4star",         label: "⭐⭐⭐⭐ (4 Star)",     stars: "⭐⭐⭐⭐" },
-  { value: "5star",         label: "⭐⭐⭐⭐⭐ (5 Star)",   stars: "⭐⭐⭐⭐⭐" }
-];
-
-// ── Status Options ──
-const STATUS_OPTIONS = [
-  "Untouch","Follow-up","Mature","Need to Visit","No Need to Follow"
-];
-
-// ── Segment Options ──
-const SEGMENT_OPTIONS = [
-  { value: "new_arrival",   label: "New Arrival" },
-  { value: "follow_up",     label: "Follow Up" },
-  { value: "mature",        label: "Mature" },
-  { value: "not_important", label: "Not Important" }
+  { value: "5star",         label: "⭐⭐⭐⭐⭐ (5 Star)",   rank: 50, stars: "⭐⭐⭐⭐⭐" },
+  { value: "4star",         label: "⭐⭐⭐⭐ (4 Star)",     rank: 40, stars: "⭐⭐⭐⭐" },
+  { value: "3star",         label: "⭐⭐⭐ (3 Star)",       rank: 30, stars: "⭐⭐⭐" },
+  { value: "not_important", label: "⚪ Not Important",    rank: 10, stars: "Not Important" }
 ];
 
 // ── Helpers ──
@@ -85,28 +73,22 @@ function getProductLabel(val) {
   return p ? p.label : val;
 }
 
+function getRatingRank(rating) {
+  const r = RATING_OPTIONS.find(o => o.value === rating);
+  return r ? r.rank : 0;
+}
+
 function getRatingStars(rating) {
   switch (rating) {
-    case '3star': return '⭐⭐⭐';
-    case '4star': return '⭐⭐⭐⭐';
     case '5star': return '⭐⭐⭐⭐⭐';
-    case 'not_important': return '⚪ Not Important';
-    default: return '—';
+    case '4star': return '⭐⭐⭐⭐';
+    case '3star': return '⭐⭐⭐';
+    case 'not_important': return '<span style="color:#94a3b8;font-size:0.8rem;">⚪ Not Important</span>';
+    default: return '<span style="color:#f59e0b;font-size:0.8rem;">⚡ Unrated</span>';
   }
 }
 
-function getStatusClass(status) {
-  if (!status) return 'status-untouch';
-  const s = status.toLowerCase().replace(/\s+/g, '-');
-  if (s.includes('untouch')) return 'status-untouch';
-  if (s.includes('follow')) return 'status-follow-up';
-  if (s.includes('mature')) return 'status-mature';
-  if (s.includes('need-to-visit')) return 'status-need-to-visit';
-  if (s.includes('no-need')) return 'status-no-need';
-  return 'status-untouch';
-}
-
-// ── WhatsApp & Call ──
+// ── Direct WhatsApp & Call (NO Pre-filled Text) ──
 function openWhatsApp(phone) {
   const clean = cleanPhone(phone);
   if (!clean) { showToast('No phone number'); return; }
@@ -119,7 +101,21 @@ function callPhone(phone) {
   window.location.href = 'tel:+' + clean;
 }
 
-// ── Toast ──
+// ── Live Header Clock ──
+function initLiveClock(elementId) {
+  function update() {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const dateStr = now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    el.innerHTML = '<span class="clock-time">' + timeStr + '</span> • <span class="clock-date">' + dateStr + '</span>';
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+// ── Toast Notification ──
 function showToast(msg) {
   let t = document.getElementById('app-toast');
   if (!t) {
@@ -133,32 +129,26 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── In-memory data ──
+// ── In-memory Cache & Live Sync ──
 let _companiesCache = {};
 let _remindersCache = {};
 let _dataListeners = [];
 
-// ── Firebase Live Listener ──
 function initLiveListener() {
   if (!_fireDB) return;
 
   _fireDB.ref('crm_data/companies').on('value', snap => {
     _companiesCache = snap.val() || {};
-    try {
-      localStorage.setItem('crm_companies_cache', JSON.stringify(_companiesCache));
-    } catch(e) {}
+    try { localStorage.setItem('crm_companies_cache', JSON.stringify(_companiesCache)); } catch(e) {}
     notifyListeners();
   });
 
   _fireDB.ref('crm_data/reminders').on('value', snap => {
     _remindersCache = snap.val() || {};
-    try {
-      localStorage.setItem('crm_reminders_cache', JSON.stringify(_remindersCache));
-    } catch(e) {}
+    try { localStorage.setItem('crm_reminders_cache', JSON.stringify(_remindersCache)); } catch(e) {}
     notifyListeners();
   });
 
-  // Load local cache immediately
   try {
     const cc = localStorage.getItem('crm_companies_cache');
     if (cc) _companiesCache = JSON.parse(cc);
@@ -187,8 +177,12 @@ function getCompany(id) {
   return _companiesCache[id] || null;
 }
 
+function getNewArrivals() {
+  return getAllCompanies().filter(c => c.segment === 'new_arrival');
+}
+
 function getNewArrivalsCount() {
-  return getAllCompanies().filter(c => c.segment === 'new_arrival').length;
+  return getNewArrivals().length;
 }
 
 function getAllReminders() {
@@ -207,11 +201,13 @@ function getTodayDateStr() {
   return `${y}-${m}-${day}`;
 }
 
+// Today's active reminders
 function getTodayReminders() {
   const today = getTodayDateStr();
   return getAllReminders().filter(r => r.date === today && !r.completed);
 }
 
+// Missed: dates strictly before today, not yet completed
 function getMissedReminders() {
   const today = getTodayDateStr();
   return getAllReminders().filter(r => r.date < today && !r.completed);
@@ -222,7 +218,7 @@ function getUpcomingReminders() {
   return getAllReminders().filter(r => r.date > today && !r.completed);
 }
 
-// ── Firebase Mutations ──
+// ── CRUD Operations ──
 function saveCompany(company) {
   if (!company.id) company.id = genId();
   company.updatedAt = new Date().toISOString();
@@ -286,103 +282,69 @@ function deleteReminder(id) {
   return Promise.resolve();
 }
 
-// ── Filter Companies ──
+// ── Sort & Filter Companies (Default: High Star to Low Star) ──
 function filterCompanies(filters = {}) {
   let list = getAllCompanies();
 
+  // If new_arrival filter
+  if (filters.onlyNewArrival) {
+    list = list.filter(c => c.segment === 'new_arrival');
+  } else if (filters.hideNewArrival) {
+    list = list.filter(c => c.segment !== 'new_arrival');
+  }
+
+  // Text search
   if (filters.search) {
-    const q = filters.search.toLowerCase();
+    const q = filters.search.toLowerCase().trim();
     list = list.filter(c =>
       (c.name && c.name.toLowerCase().includes(q)) ||
       (c.phone && c.phone.includes(q)) ||
-      (c.city && c.city.toLowerCase().includes(q))
+      (c.city && c.city.toLowerCase().includes(q)) ||
+      (c.state && c.state.toLowerCase().includes(q)) ||
+      (c.country && c.country.toLowerCase().includes(q))
     );
   }
 
+  // Star Rating filter
   if (filters.rating && filters.rating !== 'all') {
     list = list.filter(c => c.rating === filters.rating);
   }
 
-  if (filters.state && filters.state !== 'all') {
-    list = list.filter(c => c.state === filters.state);
+  // Place filter (State / India / Export)
+  if (filters.place && filters.place !== 'all') {
+    list = list.filter(c => (c.state || '').toLowerCase() === filters.place.toLowerCase());
   }
 
+  // Product filter
   if (filters.product && filters.product !== 'all') {
     list = list.filter(c => c.products && c.products.includes(filters.product));
   }
 
-  if (filters.status && filters.status !== 'all') {
-    list = list.filter(c => c.status === filters.status);
-  }
-
-  if (filters.segment && filters.segment !== 'all') {
-    list = list.filter(c => c.segment === filters.segment);
-  }
+  // SORT: High Star (50) down to Low Star (10), unrated (0), then newest first
+  list.sort((a, b) => {
+    const rankDiff = getRatingRank(b.rating) - getRatingRank(a.rating);
+    if (rankDiff !== 0) return rankDiff;
+    return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+  });
 
   return list;
 }
 
-// ── Backup Export / Import ──
-function exportBackup() {
-  const data = {
-    companies: _companiesCache,
-    reminders: _remindersCache,
-    exportedAt: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `dwarkesh-crm-backup-${getTodayDateStr()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importBackup(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.companies && _fireDB) {
-        _fireDB.ref('crm_data/companies').update(data.companies);
-      }
-      if (data.reminders && _fireDB) {
-        _fireDB.ref('crm_data/reminders').update(data.reminders);
-      }
-      showToast('Backup imported successfully!');
-    } catch(err) {
-      alert('Invalid backup file');
-    }
-  };
-  reader.readAsText(file);
-}
-
-// ── Service Worker ──
-function registerSW() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
-      console.log('SW registration failed:', err);
-    });
+// ── Smart Datalist Builder for Place (Type 'Gu' -> 'Gujarat') ──
+function renderPlaceDatalist(datalistId) {
+  let dl = document.getElementById(datalistId);
+  if (!dl) {
+    dl = document.createElement('datalist');
+    dl.id = datalistId;
+    document.body.appendChild(dl);
   }
+  dl.innerHTML = PLACE_OPTIONS.map(p => `<option value="${p}"></option>`).join('');
 }
 
-// ── Request Notification Permission ──
-function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}
-
-// ── Build Helpers ──
+// ── Card Rendering ──
 function buildProductTags(products) {
   if (!products || !products.length) return '';
   return products.map(p => `<span class="tag">${getProductLabel(p)}</span>`).join('');
-}
-
-function buildStatusBadge(status) {
-  if (!status) return '';
-  return `<span class="status-badge ${getStatusClass(status)}">${status}</span>`;
 }
 
 function buildCompanyCard(c, opts = {}) {
@@ -391,6 +353,10 @@ function buildCompanyCard(c, opts = {}) {
   const isSubpage = window.location.pathname.includes('/pages/');
   const basePath = opts.basePath !== undefined ? opts.basePath : (isSubpage ? '' : 'pages/');
 
+  const placeDisplay = c.state === 'Export'
+    ? ('✈️ Export (' + (c.country || 'International') + ')')
+    : (c.state ? ('📍 ' + c.state + (c.city ? ', ' + c.city : '')) : (c.city ? '📍 ' + c.city : ''));
+
   let html = `<div class="company-card fade-in" ${linkTo ? `onclick="window.location.href='${basePath}company.html?id=${c.id}'"` : ''}>`;
   html += `<div class="cc-top">`;
   html += `<div class="cc-name">${escHtml(c.name || 'Unnamed')}</div>`;
@@ -398,9 +364,13 @@ function buildCompanyCard(c, opts = {}) {
   html += `</div>`;
   html += `<div class="cc-meta">`;
   if (c.phone) html += `<span>📞 ${escHtml(c.phone)}</span>`;
-  if (c.city || c.state) html += `<span>📍 ${escHtml([c.city, c.state].filter(Boolean).join(', '))}</span>`;
+  if (placeDisplay) html += `<span>${escHtml(placeDisplay)}</span>`;
   html += `</div>`;
-  html += `<div class="cc-tags">${buildProductTags(c.products)} ${buildStatusBadge(c.status)}</div>`;
+  
+  if (c.products && c.products.length) {
+    html += `<div class="cc-tags">${buildProductTags(c.products)}</div>`;
+  }
+
   html += `<div class="action-row" onclick="event.stopPropagation()">`;
   html += `<button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(c.phone)}')">💬 WhatsApp</button>`;
   html += `<button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(c.phone)}')">📞 Call</button>`;
@@ -430,7 +400,7 @@ function confirmDelete(id, name) {
     _deleteModal.id = 'delete-modal';
     _deleteModal.innerHTML = `
       <div class="modal-box">
-        <h3>Delete Company</h3>
+        <h3>Delete Contact</h3>
         <p id="delete-modal-msg">Are you sure?</p>
         <div class="modal-actions">
           <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
@@ -439,12 +409,12 @@ function confirmDelete(id, name) {
       </div>`;
     document.body.appendChild(_deleteModal);
   }
-  document.getElementById('delete-modal-msg').textContent = `Delete "${name || 'this company'}"? This cannot be undone.`;
+  document.getElementById('delete-modal-msg').textContent = `Delete "${name || 'this contact'}"? This cannot be undone.`;
   _deleteModal.classList.add('open');
   document.getElementById('delete-modal-confirm').onclick = async () => {
     await deleteCompany(id);
     closeDeleteModal();
-    showToast('Company deleted');
+    showToast('Contact deleted');
   };
 }
 
@@ -452,24 +422,7 @@ function closeDeleteModal() {
   if (_deleteModal) _deleteModal.classList.remove('open');
 }
 
-// ── Populate State Dropdowns ──
-function populateStateDropdown(selectEl, selectedVal) {
-  let html = '<option value="">Select State</option>';
-  INDIAN_STATES.forEach(st => {
-    html += `<option value="${st}" ${selectedVal === st ? 'selected' : ''}>${st}</option>`;
-  });
-  selectEl.innerHTML = html;
-}
-
-function populateStateFilter(selectEl, selectedVal) {
-  let html = '<option value="all">All States</option>';
-  INDIAN_STATES.forEach(st => {
-    html += `<option value="${st}" ${selectedVal === st ? 'selected' : ''}>${st}</option>`;
-  });
-  selectEl.innerHTML = html;
-}
-
-// ── Bottom Navigation ──
+// ── Bottom Nav ──
 function renderBottomNav(activePage) {
   const isSubpage = window.location.pathname.includes('/pages/');
   const prefix = isSubpage ? '../' : '';
@@ -483,16 +436,24 @@ function renderBottomNav(activePage) {
       <span class="nav-icon">➕</span>Add
     </a>
     <a href="${prefix}pages/data.html" class="${activePage==='data'?'active':''}">
-      <span class="nav-icon">📊</span>Data
+      <span class="nav-icon">📊</span>All Data
     </a>
     <a href="${prefix}pages/reminders.html" class="${activePage==='reminders'?'active':''}">
       <span class="nav-icon">⏰</span>Reminders
     </a>`;
 }
 
+// ── Service Worker ──
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.log('SW registration:', err);
+    });
+  }
+}
+
 // ── Init on DOM ready ──
 document.addEventListener('DOMContentLoaded', () => {
   initLiveListener();
   registerSW();
-  requestNotificationPermission();
 });

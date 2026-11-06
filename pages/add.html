@@ -11,81 +11,130 @@
 
   <!-- Header -->
   <div class="app-header">
-    <img src="../assets/logo.png" alt="Logo" class="logo" />
-    <div>
-      <h1>Add New Contact</h1>
-      <div class="subtitle">Dwarkesh Polyfab CRM</div>
+    <a href="../index.html" class="back-btn" title="Back to Home">‹</a>
+    <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
+    <div class="brand-info">
+      <h1 class="brand-title">ADD NEW CONTACT</h1>
+      <div class="brand-tagline">Save Customer Details</div>
     </div>
   </div>
 
-  <!-- Form -->
-  <div class="container">
-    <form id="add-form" onsubmit="return handleSubmit(event)">
+  <div class="container form-container">
+    <form id="add-form" onsubmit="return handleAddCompany(event)">
 
-      <!-- Name -->
-      <div class="form-group">
-        <label>Company Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="f-name" placeholder="Enter company name" required />
-      </div>
+      <!-- Contact Info -->
+      <div class="form-card">
+        <div class="form-group">
+          <label>Customer / Company Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="inp-name" placeholder="e.g. Patel Bags / Ramesh Patel" required />
+        </div>
 
-      <!-- Phone -->
-      <div class="form-group">
-        <label>Phone Number <span class="required">*</span></label>
-        <input type="tel" class="form-control" id="f-phone" placeholder="Enter phone number" required />
-      </div>
+        <div class="form-group">
+          <label>Phone Number <span class="required">*</span></label>
+          <input type="tel" class="form-control" id="inp-phone" placeholder="e.g. 9876543210 (10 digits)" required />
+        </div>
 
-      <!-- State -->
-      <div class="form-group">
-        <label>State <span class="required">*</span></label>
-        <select class="form-control" id="f-state" required></select>
-      </div>
-
-      <!-- City -->
-      <div class="form-group">
-        <label>City</label>
-        <input type="text" class="form-control" id="f-city" placeholder="Enter city (optional)" />
-      </div>
-
-      <!-- Rating -->
-      <div class="form-group">
-        <label>Rating <span class="required">*</span></label>
-        <div class="radio-group" id="f-rating">
-          <label><input type="radio" name="rating" value="not_important" required /> Not Important</label>
-          <label><input type="radio" name="rating" value="3star" /> ⭐⭐⭐</label>
-          <label><input type="radio" name="rating" value="4star" /> ⭐⭐⭐⭐</label>
-          <label><input type="radio" name="rating" value="5star" /> ⭐⭐⭐⭐⭐</label>
+        <!-- Quick Call & WhatsApp while adding -->
+        <div class="action-row" style="margin-top: 10px;">
+          <button type="button" class="btn btn-green btn-sm" onclick="openWhatsApp(document.getElementById('inp-phone').value)">
+            💬 WhatsApp
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="callPhone(document.getElementById('inp-phone').value)">
+            📞 Call
+          </button>
         </div>
       </div>
 
-      <!-- Products -->
-      <div class="form-group">
-        <label>Products <span class="required">*</span> (select at least 1)</label>
-        <div class="checkbox-group" id="f-products"></div>
-        <div id="other-product-wrap" class="hidden" style="margin-top:10px;">
-          <input type="text" class="form-control" id="f-other-product" placeholder="Specify other product" />
+      <!-- Place & Location -->
+      <div class="form-card">
+        <div class="form-group">
+          <label>Place <span class="required">*</span> <small style="color:var(--text-muted);font-weight:normal;">(Type "Gu" for Gujarat, "India" for other, or "Export")</small></label>
+          <input type="text" class="form-control" id="inp-place" list="place-list-options" placeholder="Type place (e.g. Gujarat, Maharashtra, Export...)" required oninput="handlePlaceChange(this.value)" />
+          <datalist id="place-list-options"></datalist>
+        </div>
+
+        <!-- Export Country (Shows ONLY when Export is selected) -->
+        <div class="form-group hidden" id="group-export-country">
+          <label>Export Country Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="inp-country" placeholder="e.g. USA, UAE, South Africa, Germany..." />
+        </div>
+
+        <div class="form-group">
+          <label>City <small style="color:var(--text-muted);font-weight:normal;">(Optional)</small></label>
+          <input type="text" class="form-control" id="inp-city" placeholder="e.g. Morbi, Ahmedabad, Surat..." />
         </div>
       </div>
 
-      <!-- Notes -->
-      <div class="form-group">
-        <label>Requirements / Notes</label>
-        <textarea class="form-control" id="f-notes" placeholder="Enter notes or requirements (optional)"></textarea>
+      <!-- Compulsory Star Rating -->
+      <div class="form-card">
+        <label style="font-weight:700;margin-bottom:8px;display:block;">
+          Rating Priority <span class="required">*</span>
+        </label>
+        <div class="rating-picker">
+          <label class="rating-radio-card">
+            <input type="radio" name="inp-rating" value="5star" required />
+            <div class="r-body">
+              <span class="r-stars">⭐⭐⭐⭐⭐</span>
+              <span class="r-label">5 Star (Top Lead)</span>
+            </div>
+          </label>
+
+          <label class="rating-radio-card">
+            <input type="radio" name="inp-rating" value="4star" />
+            <div class="r-body">
+              <span class="r-stars">⭐⭐⭐⭐</span>
+              <span class="r-label">4 Star (Good Lead)</span>
+            </div>
+          </label>
+
+          <label class="rating-radio-card">
+            <input type="radio" name="inp-rating" value="3star" />
+            <div class="r-body">
+              <span class="r-stars">⭐⭐⭐</span>
+              <span class="r-label">3 Star (Follow-up)</span>
+            </div>
+          </label>
+
+          <label class="rating-radio-card">
+            <input type="radio" name="inp-rating" value="not_important" />
+            <div class="r-body">
+              <span class="r-stars">⚪</span>
+              <span class="r-label">Not Important</span>
+            </div>
+          </label>
+        </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="action-row mb-16">
-        <button type="button" class="btn btn-green" style="flex:1" onclick="quickWhatsApp()">📱 WhatsApp</button>
-        <button type="button" class="btn btn-primary" style="flex:1" onclick="quickCall()">📞 Call</button>
+      <!-- Product Requirements (Multi-Select) -->
+      <div class="form-card">
+        <label style="font-weight:700;margin-bottom:8px;display:block;">
+          Product Requirements <span class="required">*</span> <small style="color:var(--text-muted);font-weight:normal;">(Select 1 or more)</small>
+        </label>
+        <div class="product-grid" id="product-checkbox-grid"></div>
+
+        <!-- Other Product Details input -->
+        <div class="form-group hidden" id="group-other-product" style="margin-top:12px;">
+          <label>Specify Other Product / Bag Requirement:</label>
+          <input type="text" class="form-control" id="inp-other-product" placeholder="Describe the bag type or size..." />
+        </div>
       </div>
 
-      <!-- Save -->
-      <button type="submit" class="btn btn-primary btn-block" id="save-btn" style="padding:14px; font-size:1rem;">
+      <!-- Notes / Specific Inquiry -->
+      <div class="form-card">
+        <div class="form-group">
+          <label>Inquiry Details / Notes <small style="color:var(--text-muted);font-weight:normal;">(Optional)</small></label>
+          <textarea class="form-control" id="inp-notes" rows="3" placeholder="Add any bag size, GSM, quantity, or conversation notes..."></textarea>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-save" style="margin-bottom:30px;">
         💾 Save Contact
       </button>
     </form>
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Firebase SDK -->
@@ -94,87 +143,108 @@
   <script src="../assets/app.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      renderBottomNav('add');
-      populateStateDropdown(document.getElementById('f-state'), '');
-      buildProductCheckboxes();
-    });
-
-    function buildProductCheckboxes() {
-      const wrap = document.getElementById('f-products');
-      wrap.innerHTML = PRODUCT_OPTIONS.map(p =>
-        `<label><input type="checkbox" name="products" value="${p.value}" onchange="onProductChange()" /> ${p.label}</label>`
-      ).join('');
+    function handlePlaceChange(val) {
+      const isExport = val.trim().toLowerCase() === 'export';
+      const grp = document.getElementById('group-export-country');
+      const inpCountry = document.getElementById('inp-country');
+      if (isExport) {
+        grp.classList.remove('hidden');
+        inpCountry.required = true;
+      } else {
+        grp.classList.add('hidden');
+        inpCountry.required = false;
+        inpCountry.value = '';
+      }
     }
 
-    function onProductChange() {
-      const otherChecked = document.querySelector('input[name="products"][value="other"]');
-      document.getElementById('other-product-wrap').classList.toggle('hidden', !otherChecked || !otherChecked.checked);
+    function renderProductGrid() {
+      const grid = document.getElementById('product-checkbox-grid');
+      grid.innerHTML = PRODUCT_OPTIONS.map(p => `
+        <label class="product-check-label">
+          <input type="checkbox" name="inp-products" value="${p.value}" onchange="checkOtherOption(this)" />
+          <span>${p.label}</span>
+        </label>
+      `).join('');
     }
 
-    function quickWhatsApp() {
-      const phone = document.getElementById('f-phone').value;
-      if (!phone) { showToast('Enter phone number first'); return; }
-      openWhatsApp(phone);
+    function checkOtherOption(el) {
+      if (el.value === 'other') {
+        const otherGrp = document.getElementById('group-other-product');
+        if (el.checked) {
+          otherGrp.classList.remove('hidden');
+          document.getElementById('inp-other-product').focus();
+        } else {
+          otherGrp.classList.add('hidden');
+        }
+      }
     }
 
-    function quickCall() {
-      const phone = document.getElementById('f-phone').value;
-      if (!phone) { showToast('Enter phone number first'); return; }
-      callPhone(phone);
-    }
-
-    function handleSubmit(e) {
+    function handleAddCompany(e) {
       e.preventDefault();
 
-      const name = document.getElementById('f-name').value.trim();
-      const phone = document.getElementById('f-phone').value.trim();
-      const state = document.getElementById('f-state').value;
-      const city = document.getElementById('f-city').value.trim();
-      const notes = document.getElementById('f-notes').value.trim();
-      const otherProduct = document.getElementById('f-other-product').value.trim();
+      const name = document.getElementById('inp-name').value.trim();
+      const phone = document.getElementById('inp-phone').value.trim();
+      const place = document.getElementById('inp-place').value.trim();
+      const country = document.getElementById('inp-country').value.trim();
+      const city = document.getElementById('inp-city').value.trim();
+      const notes = document.getElementById('inp-notes').value.trim();
+      const otherProduct = document.getElementById('inp-other-product').value.trim();
 
-      // Rating
-      const ratingEl = document.querySelector('input[name="rating"]:checked');
-      if (!ratingEl) { showToast('Please select a rating'); return false; }
+      const ratingEl = document.querySelector('input[name="inp-rating"]:checked');
+      if (!ratingEl) {
+        alert('Please select a Star Rating!');
+        return false;
+      }
       const rating = ratingEl.value;
 
-      // Products
-      const checkedProducts = Array.from(document.querySelectorAll('input[name="products"]:checked')).map(el => el.value);
-      if (checkedProducts.length === 0) { showToast('Please select at least one product'); return false; }
+      const selectedProducts = Array.from(document.querySelectorAll('input[name="inp-products"]:checked')).map(el => el.value);
+      if (selectedProducts.length === 0) {
+        alert('Please select at least 1 Product Requirement!');
+        return false;
+      }
+
+      if (place.toLowerCase() === 'export' && !country) {
+        alert('Please enter Country Name for Export inquiries!');
+        return false;
+      }
+
+      const saveBtn = document.getElementById('btn-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
 
       const company = {
-        id: genId(),
         name,
         phone,
-        state,
+        state: place,
+        country: (place.toLowerCase() === 'export') ? country : '',
         city,
         rating,
-        products: checkedProducts,
-        otherProduct: checkedProducts.includes('other') ? otherProduct : '',
+        products: selectedProducts,
+        otherProduct,
         companyNotes: notes,
-        nature: '',
-        status: 'Untouch',
-        segment: 'new_arrival',
-        source: 'manual',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        segment: 'categorized', // Directly categorized!
+        source: 'manual'
       };
 
-      document.getElementById('save-btn').disabled = true;
-      document.getElementById('save-btn').textContent = 'Saving...';
-
       saveCompany(company).then(() => {
-        showToast('Contact saved!');
-        setTimeout(() => { window.location.href = 'data.html'; }, 600);
+        showToast('Contact Saved Successfully!');
+        setTimeout(() => {
+          window.location.href = 'data.html';
+        }, 500);
       }).catch(err => {
-        showToast('Error: ' + err.message);
-        document.getElementById('save-btn').disabled = false;
-        document.getElementById('save-btn').textContent = '💾 Save Contact';
+        alert('Error saving: ' + err.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save Contact';
       });
 
       return false;
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBottomNav('add');
+      renderPlaceDatalist('place-list-options');
+      renderProductGrid();
+    });
   </script>
 </body>
 </html>

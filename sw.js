@@ -3,9 +3,9 @@
 //  Handles background notifications for reminders
 // ============================================================
 
-const CACHE_NAME = 'dp-crm-v5';
+const CACHE_NAME = 'dp-crm-v7';
 
-// ðŸ“¦ Cache app files for offline use ðŸ“¦
+// Ã°Å¸â€œÂ¦ Cache app files for offline use Ã°Å¸â€œÂ¦
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll([
@@ -24,7 +24,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// ðŸ§¹ DELETE ALL OLD CACHES on activate ðŸ§¹
+// Ã°Å¸Â§Â¹ DELETE ALL OLD CACHES on activate Ã°Å¸Â§Â¹
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -40,7 +40,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ðŸ“£ Show notification (called from app via postMessage) ðŸ“£
+// Ã°Å¸â€œÂ£ Show notification (called from app via postMessage) Ã°Å¸â€œÂ£
 self.addEventListener('message', event => {
   if (!event.data) return;
 
@@ -57,8 +57,8 @@ self.addEventListener('message', event => {
         requireInteraction: true,  // stays on screen until user taps
         data:             { reminderId, companyId },
         actions: [
-          { action: 'open',    title: 'ðŸ“‹ Open Reminder' },
-          { action: 'dismiss', title: 'âœ• Dismiss'        },
+          { action: 'open',    title: 'Ã°Å¸â€œâ€¹ Open Reminder' },
+          { action: 'dismiss', title: 'Ã¢Å“â€¢ Dismiss'        },
         ]
       })
     );
@@ -70,7 +70,7 @@ self.addEventListener('message', event => {
   }
 });
 
-// ðŸ“² Handle notification tap ðŸ“²
+// Ã°Å¸â€œÂ² Handle notification tap Ã°Å¸â€œÂ²
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -94,7 +94,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// ðŸŒ Network first, then cache (always fetch fresh content) ðŸŒ
+// Ã°Å¸Å’Â Network first, then cache (always fetch fresh content) Ã°Å¸Å’Â
 self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;

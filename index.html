@@ -3,37 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Dwarkesh Polyfab CRM</title>
+  <title>Dwarkesh Polyfab — Smart CRM</title>
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f172a" />
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Live Date & Time Bar -->
+  <div class="top-clock-bar" id="top-live-clock">
+    Loading live time...
+  </div>
+
+  <!-- Header with Logo and Brand -->
   <div class="app-header">
-    <img src="assets/logo.png" alt="Logo" class="logo" />
-    <div>
-      <h1>Dwarkesh Polyfab CRM</h1>
-      <div class="subtitle">Company Management System</div>
+    <img src="assets/logo.png" alt="Dwarkesh Polyfab Logo" class="brand-logo" />
+    <div class="brand-info">
+      <h1 class="brand-title">DWARKESH POLYFAB</h1>
+      <div class="brand-tagline">WOVEN PACKAGING SOLUTION</div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="container" id="home-container">
-    <!-- Sections will be rendered by JS -->
-    <div id="home-sections"></div>
+  <div class="container home-container">
 
-    <div style="margin-top: 24px; text-align: center;">
+    <!-- 3 Smart KPI Cards in One Row / Grid -->
+    <div class="three-box-grid">
+      <!-- 1. New Arrival (from Gmail) -->
+      <a class="kpi-box box-new-arrival fade-in" href="pages/data.html?view=new_arrival">
+        <div class="kpi-top">
+          <span class="kpi-icon">🆕</span>
+          <span class="kpi-count" id="count-new-arrival">0</span>
+        </div>
+        <div class="kpi-title">New Arrival</div>
+        <div class="kpi-sub">Saved from Gmail</div>
+      </a>
+
+      <!-- 2. Today's Reminder -->
+      <a class="kpi-box box-today-reminder fade-in" href="pages/reminders.html?tab=today">
+        <div class="kpi-top">
+          <span class="kpi-icon">📅</span>
+          <span class="kpi-count" id="count-today-reminder">0</span>
+        </div>
+        <div class="kpi-title">Today's Reminder</div>
+        <div class="kpi-sub">Scheduled for Today</div>
+      </a>
+
+      <!-- 3. Missed Reminder -->
+      <a class="kpi-box box-missed-reminder fade-in" href="pages/reminders.html?tab=missed">
+        <div class="kpi-top">
+          <span class="kpi-icon">⚠️</span>
+          <span class="kpi-count" id="count-missed-reminder">0</span>
+        </div>
+        <div class="kpi-title">Missed Reminder</div>
+        <div class="kpi-sub">Overdue Follow-ups</div>
+      </a>
+    </div>
+
+    <!-- Quick Navigation Action Cards -->
+    <div class="home-actions-list">
+      <a class="main-action-card card-all-data fade-in" href="pages/data.html">
+        <div class="mac-left">
+          <span class="mac-icon">📊</span>
+          <div>
+            <div class="mac-title">All Data</div>
+            <div class="mac-sub">Ranked ⭐⭐⭐⭐⭐ High to Low Stars</div>
+          </div>
+        </div>
+        <div class="mac-badge" id="count-all-data">0</div>
+      </a>
+
+      <a class="main-action-card card-add fade-in" href="pages/add.html">
+        <div class="mac-left">
+          <span class="mac-icon">➕</span>
+          <div>
+            <div class="mac-title">Add New Contact</div>
+            <div class="mac-sub">Direct input with Place & Stars</div>
+          </div>
+        </div>
+        <span class="mac-arrow">➔</span>
+      </a>
+    </div>
+
+    <!-- Backup Controls -->
+    <div class="backup-bar">
       <button class="btn btn-outline btn-sm" onclick="exportBackup()">📥 Export Backup</button>
       <label class="btn btn-outline btn-sm" style="cursor:pointer;">
         📤 Import Backup
         <input type="file" accept=".json" style="display:none" onchange="importBackup(this.files[0])" />
       </label>
     </div>
+
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Nav Bar -->
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Firebase SDK -->
@@ -42,76 +104,28 @@
   <script src="assets/app.js"></script>
 
   <script>
-    function renderHome() {
-      const newCount = getNewArrivalsCount();
-      const todayCount = getTodayReminders().length;
-      const missedCount = getMissedReminders().length;
-      const totalCount = getAllCompanies().length;
+    function renderHomeKPIs() {
+      const newArrivals = getNewArrivalsCount();
+      const todayReminders = getTodayReminders().length;
+      const missedReminders = getMissedReminders().length;
+      const allCompanies = getAllCompanies().length;
 
-      const el = document.getElementById('home-sections');
-      el.innerHTML = `
-        <a class="section-card fade-in" href="pages/data.html?segment=new_arrival">
-          <div class="sc-left">
-            <div class="sc-icon blue">🆕</div>
-            <div>
-              <div class="sc-title">New Arrivals</div>
-              <div class="sc-sub">Recently added contacts</div>
-            </div>
-          </div>
-          <div class="sc-badge">${newCount}</div>
-        </a>
+      const elNew = document.getElementById('count-new-arrival');
+      const elToday = document.getElementById('count-today-reminder');
+      const elMissed = document.getElementById('count-missed-reminder');
+      const elAll = document.getElementById('count-all-data');
 
-        <a class="section-card fade-in" href="pages/reminders.html?tab=today">
-          <div class="sc-left">
-            <div class="sc-icon green">📅</div>
-            <div>
-              <div class="sc-title">Today's Reminders</div>
-              <div class="sc-sub">Tasks due today</div>
-            </div>
-          </div>
-          <div class="sc-badge green-badge">${todayCount}</div>
-        </a>
-
-        <a class="section-card fade-in" href="pages/reminders.html?tab=missed">
-          <div class="sc-left">
-            <div class="sc-icon red">⚠️</div>
-            <div>
-              <div class="sc-title">Missed Reminders</div>
-              <div class="sc-sub">Overdue tasks</div>
-            </div>
-          </div>
-          <div class="sc-badge red-badge">${missedCount}</div>
-        </a>
-
-        <a class="section-card fade-in" href="pages/data.html">
-          <div class="sc-left">
-            <div class="sc-icon purple">📊</div>
-            <div>
-              <div class="sc-title">All Data</div>
-              <div class="sc-sub">Browse & filter companies</div>
-            </div>
-          </div>
-          <div class="sc-badge">${totalCount}</div>
-        </a>
-
-        <a class="section-card fade-in" href="pages/add.html">
-          <div class="sc-left">
-            <div class="sc-icon orange">➕</div>
-            <div>
-              <div class="sc-title">Add New Contact</div>
-              <div class="sc-sub">Add a company to CRM</div>
-            </div>
-          </div>
-          <div class="sc-badge" style="background:transparent;color:var(--text-muted);">→</div>
-        </a>
-      `;
+      if (elNew) elNew.textContent = newArrivals;
+      if (elToday) elToday.textContent = todayReminders;
+      if (elMissed) elMissed.textContent = missedReminders;
+      if (elAll) elAll.textContent = allCompanies;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      initLiveClock('top-live-clock');
       renderBottomNav('home');
-      onDataChange(renderHome);
-      // Initial render in case data already loaded
-      setTimeout(renderHome, 500);
+      onDataChange(renderHomeKPIs);
+      setTimeout(renderHomeKPIs, 400);
     });
   </script>
 </body>

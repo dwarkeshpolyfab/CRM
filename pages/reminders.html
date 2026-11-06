@@ -9,36 +9,37 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- App Header -->
   <div class="app-header">
-    <img src="../assets/logo.png" alt="Logo" class="logo" />
-    <div>
-      <h1>Reminders</h1>
-      <div class="subtitle">Dwarkesh Polyfab CRM</div>
+    <a href="../index.html" class="back-btn" title="Back to Home">‹</a>
+    <img src="../assets/logo.png" alt="Logo" class="brand-logo sm" />
+    <div class="brand-info">
+      <h1 class="brand-title">FOLLOW-UP REMINDERS</h1>
+      <div class="brand-tagline">Track Scheduled Calls & Inquiries</div>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- Tabs -->
-    <div class="tabs" id="reminder-tabs">
-      <button class="tab-btn active" data-tab="today" onclick="switchTab('today', this)">
-        📅 Today <span class="tab-badge" id="badge-today">0</span>
+    <!-- 3 Reminder Tabs -->
+    <div class="reminder-tabs">
+      <button class="rtab active" id="tab-today-btn" onclick="switchTab('today')">
+        📅 Today <span class="tab-badge green" id="badge-today">0</span>
       </button>
-      <button class="tab-btn" data-tab="upcoming" onclick="switchTab('upcoming', this)">
-        🔜 Upcoming <span class="tab-badge" id="badge-upcoming">0</span>
+      <button class="rtab" id="tab-missed-btn" onclick="switchTab('missed')">
+        ⚠️ Missed <span class="tab-badge red" id="badge-missed">0</span>
       </button>
-      <button class="tab-btn" data-tab="missed" onclick="switchTab('missed', this)">
-        ⚠️ Missed <span class="tab-badge" id="badge-missed">0</span>
+      <button class="rtab" id="tab-upcoming-btn" onclick="switchTab('upcoming')">
+        ⏳ Upcoming <span class="tab-badge" id="badge-upcoming">0</span>
       </button>
     </div>
 
-    <!-- Reminder List -->
-    <div id="reminder-list"></div>
+    <!-- Reminder Cards List -->
+    <div id="reminders-list" style="margin-top:14px;"></div>
 
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- Firebase SDK -->
@@ -47,86 +48,99 @@
   <script src="../assets/app.js"></script>
 
   <script>
-    let activeTab = 'today';
+    let currentTab = 'today';
 
-    function switchTab(tab, btn) {
-      activeTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderReminders();
+    function initTabFromUrl() {
+      const p = new URLSearchParams(window.location.search);
+      const tabParam = p.get('tab');
+      if (tabParam === 'missed' || tabParam === 'upcoming' || tabParam === 'today') {
+        currentTab = tabParam;
+      }
     }
 
-    function renderReminders() {
-      const today = getTodayReminders();
-      const upcoming = getUpcomingReminders();
-      const missed = getMissedReminders();
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-${tab}-btn`);
+      if (activeBtn) activeBtn.classList.add('active');
+      renderRemindersPage();
+    }
 
-      // Update badges
-      document.getElementById('badge-today').textContent = today.length;
-      document.getElementById('badge-upcoming').textContent = upcoming.length;
-      document.getElementById('badge-missed').textContent = missed.length;
+    function renderRemindersPage() {
+      const todayRem = getTodayReminders();
+      const missedRem = getMissedReminders();
+      const upRem = getUpcomingReminders();
+
+      // Update badge counts
+      const bToday = document.getElementById('badge-today');
+      const bMissed = document.getElementById('badge-missed');
+      const bUpcoming = document.getElementById('badge-upcoming');
+      if (bToday) bToday.textContent = todayRem.length;
+      if (bMissed) bMissed.textContent = missedRem.length;
+      if (bUpcoming) bUpcoming.textContent = upRem.length;
 
       let list = [];
-      if (activeTab === 'today') list = today;
-      else if (activeTab === 'upcoming') list = upcoming.sort((a,b) => (a.date||'').localeCompare(b.date||''));
-      else list = missed.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      if (currentTab === 'today') list = todayRem;
+      else if (currentTab === 'missed') list = missedRem;
+      else if (currentTab === 'upcoming') list = upRem;
 
-      const el = document.getElementById('reminder-list');
-
+      const container = document.getElementById('reminders-list');
       if (list.length === 0) {
-        const msgs = {
-          today: 'No reminders for today 🎉',
-          upcoming: 'No upcoming reminders',
-          missed: 'No missed reminders ✅'
-        };
-        el.innerHTML = `
+        container.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">${activeTab === 'missed' ? '✅' : '📭'}</div>
-            <p>${msgs[activeTab]}</p>
+            <div class="empty-icon">${currentTab === 'missed' ? '🎉' : '⏰'}</div>
+            <p>${currentTab === 'missed' ? 'No missed reminders! All caught up.' : 'No reminders in this tab.'}</p>
           </div>`;
         return;
       }
 
-      el.innerHTML = list.map(r => {
-        const phone = r.companyPhone || '';
+      container.innerHTML = list.map(r => {
+        const c = getCompany(r.companyId);
+        const name = r.companyName || (c ? c.name : 'Unknown Contact');
+        const phone = r.companyPhone || (c ? c.phone : '');
+        const isMissed = (currentTab === 'missed');
+
         return `
-          <div class="reminder-card fade-in">
-            <div class="rc-company">${escHtml(r.companyName || 'Unknown')}</div>
-            <div class="rc-note">${escHtml(r.note || 'No note')}</div>
-            <div class="rc-date">📅 ${r.date}${phone ? ' • 📞 ' + escHtml(phone) : ''}</div>
-            <div class="rc-actions">
-              <button class="btn btn-green btn-sm" onclick="openWhatsApp('${escAttr(phone)}')">📱 WhatsApp</button>
-              <button class="btn btn-primary btn-sm" onclick="callPhone('${escAttr(phone)}')">📞 Call</button>
-              <button class="btn btn-outline btn-sm" onclick="markDone('${r.id}')">✅ Done</button>
-              <button class="btn btn-red btn-sm" onclick="removeDel('${r.id}')">🗑️</button>
+          <div class="reminder-card fade-in ${isMissed ? 'missed' : ''}">
+            <div class="rc-top" onclick="window.location.href='company.html?id=${r.companyId}'" style="cursor:pointer;">
+              <div>
+                <div class="rc-name">${escHtml(name)}</div>
+                <div class="rc-note">${escHtml(r.note || 'Follow-up call')}</div>
+              </div>
+              <div class="rc-date-badge ${isMissed ? 'red' : ''}">
+                ${isMissed ? '⚠️ Missed: ' : '📅 '} ${r.date}
+              </div>
             </div>
-          </div>`;
+
+            <div class="rc-actions" style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-green btn-sm flex-1" onclick="openWhatsApp('${escAttr(phone)}')">
+                💬 WhatsApp
+              </button>
+              <button class="btn btn-primary btn-sm flex-1" onclick="callPhone('${escAttr(phone)}')">
+                📞 Call
+              </button>
+              <button class="btn btn-outline btn-sm flex-1" onclick="handleCompleteReminder('${r.id}')">
+                ✅ Done / Updated
+              </button>
+            </div>
+          </div>
+        `;
       }).join('');
     }
 
-    function markDone(id) {
-      completeReminder(id).then(() => showToast('Reminder completed'));
-    }
-
-    function removeDel(id) {
-      deleteReminder(id).then(() => showToast('Reminder deleted'));
+    function handleCompleteReminder(id) {
+      completeReminder(id).then(() => {
+        showToast('Reminder Updated & Completed!');
+        renderRemindersPage();
+      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       renderBottomNav('reminders');
-
-      // Check URL param for tab
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab');
-      if (tabParam && ['today','upcoming','missed'].includes(tabParam)) {
-        activeTab = tabParam;
-        document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.tab === activeTab);
-        });
-      }
-
-      onDataChange(renderReminders);
-      setTimeout(renderReminders, 500);
+      initTabFromUrl();
+      switchTab(currentTab);
+      onDataChange(renderRemindersPage);
+      setTimeout(renderRemindersPage, 300);
     });
   </script>
 </body>
