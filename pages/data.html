@@ -43,7 +43,15 @@
 <div class="dropdown-backdrop hidden" id="dd-backdrop" onclick="closeDropdown()"></div>
 
 <!-- Firebase Web SDK (v9 compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+  function quickDelete(id, name) {
+    if (confirm('Delete "' + name + '"?')) {
+      deleteCompany(id);
+      buildFilters();
+      renderList();
+    }
+  }
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="../assets/app.js"></script>
 <script>
@@ -123,6 +131,7 @@
                 </div>`).join('')}
             </div>
           </div>
+          <button onclick="event.stopPropagation();quickDelete('${company.id}',`${company.name.replace(/[`\\'"]/g, '')}`)" style="background:none;border:none;font-size:15px;cursor:pointer;padding:6px 8px;margin-left:2px;opacity:0.6" title="Delete">🗑️</button>
         </div>`;
     }).join('');
   }

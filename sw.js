@@ -1,11 +1,11 @@
 // ============================================================
-//  Dwarkesh Polyfab CRM – Service Worker (sw.js)
+//  Dwarkesh Polyfab CRM - Service Worker (sw.js)
 //  Handles background notifications for reminders
 // ============================================================
 
-const CACHE_NAME = 'dp-crm-v2';
+const CACHE_NAME = 'dp-crm-v4';
 
-// ── Cache app files for offline use ──
+// 📦 Cache app files for offline use 📦
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll([
@@ -24,11 +24,23 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
+// 🧹 DELETE ALL OLD CACHES on activate 🧹
 self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => {
+            console.log('[SW] Deleting old cache:', key);
+            return caches.delete(key);
+          })
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
-// ── Show notification (called from app via postMessage) ──
+// 📣 Show notification (called from app via postMessage) 📣
 self.addEventListener('message', event => {
   if (!event.data) return;
 
@@ -58,7 +70,7 @@ self.addEventListener('message', event => {
   }
 });
 
-// ── Handle notification tap ──
+// 📲 Handle notification tap 📲
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -82,9 +94,22 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// ── Serve from cache when offline ──
+// 🌐 Network first, then cache (always fetch fresh content) 🌐
 self.addEventListener('fetch', event => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => cached))
+    fetch(event.request)
+      .then(response => {
+        // Clone and store fresh copy in cache
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => {
+        // Network failed - serve from cache
+        return caches.match(event.request);
+      })
   );
 });
